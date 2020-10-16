@@ -1,7 +1,7 @@
 <?php
 namespace xjryanse\user\service;
 
-use app\common\interfaces\MainModelInterface;
+use xjryanse\system\interfaces\MainModelInterface;
 
 /**
  * 小程序用户表

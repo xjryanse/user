@@ -1,7 +1,7 @@
 <?php
 namespace xjryanse\user\service;
 
-use app\common\interfaces\MainModelInterface;
+use xjryanse\system\interfaces\MainModelInterface;
 use think\facade\Request;
 /**
  * 用户登录日志

@@ -1,7 +1,7 @@
 <?php
 namespace xjryanse\user\service;
 
-use app\common\interfaces\MainModelInterface;
+use xjryanse\system\interfaces\MainModelInterface;
 
 /**
  * 用户账户流水

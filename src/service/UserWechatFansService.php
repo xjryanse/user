@@ -1,7 +1,7 @@
 <?php
 namespace xjryanse\user\service;
 
-use app\common\interfaces\MainModelInterface;
+use xjryanse\system\interfaces\MainModelInterface;
 
 /**
  * 微信公众号粉丝表

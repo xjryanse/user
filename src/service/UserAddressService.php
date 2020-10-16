@@ -12,6 +12,6 @@ class UserAddressService implements MainModelInterface
     use \app\common\traits\MainModelTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass    = '\\app\\user\\model\\UserAddress';
+    protected static $mainModelClass    = '\\xjryanse\\user\\model\\UserAddress';
 
 }

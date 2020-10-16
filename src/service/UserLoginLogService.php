@@ -12,7 +12,7 @@ class UserLoginLogService implements MainModelInterface
     use \app\common\traits\MainModelTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass    = '\\app\\user\\model\\UserLoginLog';
+    protected static $mainModelClass    = '\\xjryanse\\user\\model\\UserLoginLog';
 
         /**
      * 记录登录日志

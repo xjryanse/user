@@ -12,6 +12,6 @@ class UserWechatMiniService implements MainModelInterface
     use \app\common\traits\MainModelTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass    = '\\app\\user\\model\\UserWechatMini';
+    protected static $mainModelClass    = '\\xjryanse\\user\\model\\UserWechatMini';
 
 }

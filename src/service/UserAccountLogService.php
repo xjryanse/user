@@ -12,6 +12,6 @@ class UserAccountLogService implements MainModelInterface
     use \app\common\traits\MainModelTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass    = '\\app\\user\\model\\UserAccountLog';
+    protected static $mainModelClass    = '\\xjryanse\\user\\model\\UserAccountLog';
 
 }

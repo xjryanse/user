@@ -12,6 +12,6 @@ class UserAccountService implements MainModelInterface
     use \app\common\traits\MainModelTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass    = '\\app\\user\\model\\UserAccount';
+    protected static $mainModelClass    = '\\xjryanse\\user\\model\\UserAccount';
 
 }

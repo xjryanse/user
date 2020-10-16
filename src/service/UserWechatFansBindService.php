@@ -12,6 +12,6 @@ class UserWechatFansBindService implements MainModelInterface
     use \app\common\traits\MainModelTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass    = '\\app\\user\\model\\UserWechatFansBind';
+    protected static $mainModelClass    = '\\xjryanse\\user\\model\\UserWechatFansBind';
 
 }

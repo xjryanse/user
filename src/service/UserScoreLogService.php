@@ -12,6 +12,6 @@ class UserScoreLogService implements MainModelInterface
     use \app\common\traits\MainModelTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass    = '\\app\\user\\model\\UserScoreLog';
+    protected static $mainModelClass    = '\\xjryanse\\user\\model\\UserScoreLog';
 
 }

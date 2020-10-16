@@ -12,6 +12,6 @@ class UserSignLogService implements MainModelInterface
     use \app\common\traits\MainModelTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass    = '\\app\\user\\model\\UserSignLog';
+    protected static $mainModelClass    = '\\xjryanse\\user\\model\\UserSignLog';
 
 }

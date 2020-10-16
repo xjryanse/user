@@ -16,7 +16,7 @@ class LoginLogic
      * 
      * @return type
      */
-    public function login( $param )
+    public static function login( $param )
     {
         //取用户信息
         $userName = Arrays::value($param, 'username');
@@ -64,7 +64,7 @@ class LoginLogic
     /**
      * 退出
      */
-    public function logout()
+    public static function logout()
     {
 //        $comKey = session('scopeCompanyKey'); 
 //        //是微信浏览器环境，同时更新用户的默认登录
@@ -75,12 +75,12 @@ class LoginLogic
         //清空session用户信息
         Session::clear();
 
-        return $this->succReturn('退出登录成功');
+        return true;
     }
     /**
      * 用户session
      */
-    public function userSession()
+    public static function userSession()
     {
         $data['userInfo']   = session('scopeUserInfo');
         $data['userId']     = session('scopeUserId');

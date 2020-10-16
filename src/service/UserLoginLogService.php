@@ -8,8 +8,8 @@ use think\facade\Request;
  */
 class UserLoginLogService implements MainModelInterface
 {
-    use \app\common\traits\InstTrait;
-    use \app\common\traits\MainModelTrait;
+    use \xjryanse\traits\InstTrait;
+    use \xjryanse\traits\MainModelTrait;
 
     protected static $mainModel;
     protected static $mainModelClass    = '\\xjryanse\\user\\model\\UserLoginLog';

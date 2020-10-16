@@ -30,7 +30,7 @@ class LoginLogic
         Cache::set('tmpCon',$con);
         if(!$userInfo){
             //系统级的超级管理员账户
-            $con1[] = ['username','=',Request::param('username','')];
+            $con1[] = ['username','=',$userName];
             $con1[] = ['admin_type','=','super'];       //超级管理账号
             Cache::set('tmpCon1',$con1);
             $userInfo = UserService::find( $con1 );

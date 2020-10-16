@@ -6,13 +6,13 @@ use xjryanse\system\interfaces\MainModelInterface;
 /**
  * 角色权限
  */
-class AuthRoleAccessService implements MainModelInterface
+class UserAuthRoleAccessService implements MainModelInterface
 {
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass    = '\\xjryanse\\user\\model\\AuthRoleAccess';
+    protected static $mainModelClass    = '\\xjryanse\\user\\model\\UserAuthRoleAccess';
 
     /**
      * 角色的权限id数组

@@ -6,13 +6,13 @@ use xjryanse\system\interfaces\MainModelInterface;
 /**
  * 用户角色
  */
-class AuthUserRoleService implements MainModelInterface
+class UserAuthUserRoleService implements MainModelInterface
 {
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass    = '\\xjryanse\\user\\model\\AuthUserRole';
+    protected static $mainModelClass    = '\\xjryanse\\user\\model\\UserAuthUserRole';
     /**
      * 用户的角色id数组
      */

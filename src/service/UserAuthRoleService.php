@@ -7,13 +7,13 @@ use Exception;
 /**
  * 角色
  */
-class AuthRoleService implements MainModelInterface
+class UserAuthRoleService implements MainModelInterface
 {
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass    = '\\xjryanse\\user\\model\\AuthRole';
+    protected static $mainModelClass    = '\\xjryanse\\user\\model\\UserAuthRole';
 
     public static function saveCheck(array $data)
     {

@@ -7,13 +7,13 @@ use think\facade\Request;
 /**
  * 权限
  */
-class AuthAccessService implements MainModelInterface
+class UserAuthAccessService implements MainModelInterface
 {
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass    = '\\xjryanse\\user\\model\\AuthAccess';
+    protected static $mainModelClass    = '\\xjryanse\\user\\model\\UserAuthAccess';
 
     public static function saveCheck(array $data)
     {

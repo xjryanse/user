@@ -2,9 +2,9 @@
 namespace xjryanse\user\model;
 
 /**
- * 角色
+ * 用户角色
  */
-class AuthRole extends Base
+class UserAuthUserRole extends Base
 {
     
 

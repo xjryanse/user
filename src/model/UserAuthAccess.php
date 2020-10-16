@@ -5,7 +5,7 @@ namespace xjryanse\user\model;
 /**
  * 权限
  */
-class AuthAccess extends Base
+class UserAuthAccess extends Base
 {
     /*
     public function getUrlAttr($value)

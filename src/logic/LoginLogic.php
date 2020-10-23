@@ -1,10 +1,8 @@
 <?php
 namespace xjryanse\user\logic;
 
-use xjryanse\logic\Arrays;
 use xjryanse\user\service\UserService;
 use xjryanse\user\service\UserLoginLogService;
-use think\facade\Cache;
 use think\facade\Session;
 use Exception;
 /**
@@ -13,29 +11,25 @@ use Exception;
 class LoginLogic
 {
     /**
-     * 
+     * 登录信息
+     * @param type $userName    用户名
+     * @param type $password    密码
      * @return type
+     * @throws Exception
      */
-    public static function login( $param )
+    public static function login( $userName, $password )
     {
-        //取用户信息
-        $userName = Arrays::value($param, 'username');
-        //取密码
-        $password = Arrays::value($param, 'password');
-        
         $con[] = ['username','=', $userName ];
         $con[] = ['company_id','in',session('scopeCompanyId')];
 
         $userInfo = UserService::find( $con );
-        Cache::set('tmpCon',$con);
+
         if(!$userInfo){
-            //系统级的超级管理员账户
+            //系统级的超级管理员账户：跨了公司
             $con1[] = ['username','=',$userName];
             $con1[] = ['admin_type','=','super'];       //超级管理账号
-            Cache::set('tmpCon1',$con1);
             $userInfo = UserService::find( $con1 );
         }
-            Cache::set('lastSql',UserService::mainModel()->getLastSql());        
 
         if(!$userInfo){
             throw new Exception('用户不存在');
@@ -46,7 +40,6 @@ class LoginLogic
         if($userInfo['status'] != 1){
             throw new Exception('用户状态异常');
         }
-//        Session::clear();        
         //记录登录日志
         UserLoginLogService::loginLog( $userInfo );
         

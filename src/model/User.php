@@ -1,7 +1,7 @@
 <?php
 namespace xjryanse\user\model;
 
-use app\db\logic\DbLogic;
+use xjryanse\system\service\SystemFileService;
 /**
  * 用户总表
  */
@@ -14,10 +14,7 @@ class User extends Base
      */
     public function getHeadimgurlAttr( $value )
     {
-        if($value){
-            return DbLogic::get('w_file', $value);
-        }
-        return $value;
+        return $value ? SystemFileService::getInstance( $value )->get() : $value ;
     }
     
 

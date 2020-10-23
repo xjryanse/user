@@ -1,7 +1,7 @@
 <?php
 namespace xjryanse\user\model;
 
-use app\db\logic\DbLogic;
+use xjryanse\system\service\SystemFileService;
 /**
  * 用户实名
  */
@@ -14,10 +14,7 @@ class UserIdno extends Base
      */
     public function getPicFaceAttr( $value )
     {
-        if($value){
-            return DbLogic::get('w_file', $value);
-        }
-        return $value;
+        return $value ? SystemFileService::getInstance( $value )->get() : $value ;
     }
     /**
      * 身份证反面
@@ -26,10 +23,7 @@ class UserIdno extends Base
      */
     public function getPicBackAttr( $value )
     {
-        if($value){
-            return DbLogic::get('w_file', $value);
-        }
-        return $value;
+        return $value ? SystemFileService::getInstance( $value )->get() : $value ;
     }
     /**
      * 人脸实拍
@@ -38,10 +32,7 @@ class UserIdno extends Base
      */
     public function getRealFaceAttr( $value )
     {
-        if($value){
-            return DbLogic::get('w_file', $value);
-        }
-        return $value;
+        return $value ? SystemFileService::getInstance( $value )->get() : $value ;
     }    
 
 }

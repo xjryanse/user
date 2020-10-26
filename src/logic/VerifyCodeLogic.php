@@ -14,7 +14,7 @@ class VerifyCodeLogic
      * @param type $length  长度
      * @return type
      */
-    public function generate($key, $userIdentify, $length=6, $data = [])
+    public static function generate($key, $userIdentify, $length=6, $data = [])
     {
         $data['code']       = BverifyCodeService::generate( $length );
         $data['has_used']   = 0; //未使用
@@ -28,7 +28,7 @@ class VerifyCodeLogic
      * @return type
      */
     
-    public function verify($key,$userIdentify,$code ,$inSeconds = 300)
+    public static function verify($key,$userIdentify,$code ,$inSeconds = 300)
     {
         return UserVerifyCodeService::verify( $key , $userIdentify, $code, $inSeconds);
     }

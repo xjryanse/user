@@ -16,7 +16,7 @@ class VerifyCodeLogic
      */
     public static function generate($key, $userIdentify, $length=6, $data = [])
     {
-        $data['code']       = BverifyCodeService::generate( $length );
+        $data['code']       = UserVerifyCodeService::generate( $length );
         $data['has_used']   = 0; //未使用
         //相同key验证码失效
         UserVerifyCodeService::invalid( $key , $userIdentify );

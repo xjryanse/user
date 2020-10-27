@@ -26,5 +26,29 @@ class UserAccountService implements MainModelInterface
         $con[] = ['account_type','=',$accountType ];
 
         return self::find( $con );
+    }    
+    
+    /**
+     * 入账更新
+     */
+    public function income( $value ,$updateTotal = true)
+    {
+        self::checkTransaction();
+        //总得额更新（只增不减）
+        if( $updateTotal ){
+            self::mainModel()->where('id',$this->uuid)->setInc('total',$value );
+        }
+        //账户余额更新
+        return self::mainModel()->where('id',$this->uuid)->setInc('current',$value );
     }
+    /**
+     * 资金出账更新
+     */
+    public function outcome( $value )
+    {
+        self::checkTransaction();
+        //账户余额更新
+        return self::mainModel()->where('id',$this->uuid)->setDec('current',$value );
+    }
+    
 }

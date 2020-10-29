@@ -14,4 +14,23 @@ class UserService implements MainModelInterface
     protected static $mainModel;
     protected static $mainModelClass    = '\\xjryanse\\user\\model\\User';
 
+    /*
+     * 手机号码取用户信息
+     */
+    public static function getUserInfoByPhone( $phone )
+    {
+        if(!$phone){
+            return false;
+        }
+        $con    = [];
+        $con[]  = ['phone','=',$phone];
+        $info   = self::find( $con );
+        if(!$info){
+            //尝试匹配用户名中的手机号码
+            $con1   = [];
+            $con1[] = ['user_name','=',$phone];
+            $info   = self::find( $con1 );
+        }
+        return $info;
+    }
 }

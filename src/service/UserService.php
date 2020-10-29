@@ -28,7 +28,7 @@ class UserService implements MainModelInterface
         if(!$info){
             //尝试匹配用户名中的手机号码
             $con1   = [];
-            $con1[] = ['user_name','=',$phone];
+            $con1[] = ['username','=',$phone];
             $info   = self::find( $con1 );
         }
         return $info;

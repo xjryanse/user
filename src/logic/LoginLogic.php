@@ -85,7 +85,8 @@ class LoginLogic
      */
     public static function sessionUserSet( $userId )
     {
-        $userInfo = UserService::getInstance( $userId )->get();
+        //从数据库直接拿
+        $userInfo = UserService::getInstance( $userId )->get( 0 );
         session( 'scopeUserInfo', $userInfo );
         session( 'scopeUserId', $userInfo['id'] );
         return $userInfo;

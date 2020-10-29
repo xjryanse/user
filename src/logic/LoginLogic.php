@@ -80,5 +80,14 @@ class LoginLogic
         $data['sessionId']  = session_id();
         return $data;
     }
-    
+    /**
+     * 直接设定了当前用户的信息
+     */
+    public static function sessionUserSet( $userId )
+    {
+        $userInfo = UserService::getInstance( $userId )->get();
+        session( 'scopeUserInfo', $userInfo );
+        session( 'scopeUserId', $userInfo['id'] );
+        return $userInfo;
+    }
 }

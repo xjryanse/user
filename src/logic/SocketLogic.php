@@ -72,7 +72,7 @@ class SocketLogic
      */
     public function send( $connectIds, $message )
     {
-        $data['to_user'] = !is_array($connectIds) ? implode(',',$connectIds ) : $connectIds;
+        $data['to_user'] = implode(',',$connectIds );
         $data['message'] = $message ;
 
         return Query::posturl( $this->socketSendUrl , $data );

@@ -27,7 +27,7 @@ class UserAuthAccessService implements MainModelInterface
     public static function listsInfo( $con = [],$order='')
     {
         if(self::mainModel()->hasField('app_id')){
-            $con[] = ['app_id','=',session('scopeAppId')];
+            $con[] = ['app_id','=',session(SESSION_APP_ID)];
         }
         $lists = self::mainModel()->where( $con )->order($order)->cache(2)->select();
         foreach($lists as &$v){

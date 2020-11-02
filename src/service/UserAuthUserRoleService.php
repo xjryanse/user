@@ -21,7 +21,7 @@ class UserAuthUserRoleService implements MainModelInterface
         $con[] = ['user_id','in',$userId];
         //只查有效
         $con[] = ['status','=',1];
-        $con[] = ['app_id','=',session('scopeAppId')];
+        $con[] = ['app_id','=',session(SESSION_APP_ID)];
         
         return self::mainModel()->where( $con )->distinct('role_id')->column('role_id');
     }

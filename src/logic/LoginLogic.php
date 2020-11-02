@@ -20,7 +20,7 @@ class LoginLogic
     public static function login( $userName, $password )
     {
         $con[] = ['username','=', $userName ];
-        $con[] = ['company_id','in',session('scopeCompanyId')];
+        $con[] = ['company_id','in',session(SESSION_COMPANY_ID)];
 
         $userInfo = UserService::find( $con );
 
@@ -44,7 +44,7 @@ class LoginLogic
         UserLoginLogService::loginLog( $userInfo );
         
         //登录信息存session
-        session('scopeUserId',$userInfo['id']);
+        session(SESSION_USER_ID,$userInfo['id']);
         session('scopeUserInfo',$userInfo);
         $userInfo['sessionId'] = session_id();
         //是微信浏览器环境，同时更新用户的默认登录
@@ -59,7 +59,7 @@ class LoginLogic
      */
     public static function logout()
     {
-//        $comKey = session('scopeCompanyKey'); 
+//        $comKey = session(SESSION_COMPANY_KEY); 
 //        //是微信浏览器环境，同时更新用户的默认登录
 //        if(WxBrowser::isWxBrowser() && session('myOpenid')){
 //            //将用户设为0;
@@ -76,7 +76,7 @@ class LoginLogic
     public static function userSession()
     {
         $data['userInfo']   = session('scopeUserInfo');
-        $data['userId']     = session('scopeUserId');
+        $data['userId']     = session(SESSION_USER_ID);
         $data['sessionId']  = session_id();
         return $data;
     }
@@ -88,7 +88,7 @@ class LoginLogic
         //从数据库直接拿
         $userInfo = UserService::getInstance( $userId )->get( 0 );
         session( 'scopeUserInfo', $userInfo );
-        session( 'scopeUserId', $userInfo['id'] );
+        session( SESSION_USER_ID, $userInfo['id'] );
         return $userInfo;
     }
 }

@@ -8,6 +8,31 @@ use xjryanse\user\service\UserSocketService;
  */
 class SocketLogic
 {
+    //应用id
+    protected $socketAppId ;
+    //应用secret
+    protected $socketSecret ;
+    //应用secret
+    protected $socketCodeUrl = "http://socket.xiesemi.cn/connect/app/code" ;
+    //socket发送地址
+    protected $socketSendUrl = "https://travel.xiesemi.cn:9581";
+    /**
+     * socket初始实例化
+     * @param type $socketAppId     应用appid
+     * @param type $socketSecret    应用密钥
+     */
+    public function __construct( $socketAppId, $socketSecret, $socketCodeUrl="" ,$socketSendUrl = "") {
+        //应用appid
+        $this->socketAppId  = $socketAppId;
+        //应用密钥
+        $this->socketSecret = $socketSecret;
+        if( $socketCodeUrl ){
+            $this->socketCodeUrl    = $socketCodeUrl;
+        }
+        if( $socketSendUrl ){
+            $this->socketSendUrl    = $socketSendUrl;
+        }
+    }
 
     /*
      * 获取socket连接code
@@ -39,17 +64,29 @@ class SocketLogic
             return UserSocketService::getInstance( $info['id'] )->update(['connect_id'=>$connectId]);
         }
     }
-    
+    /**
+     * socket消息直发
+     * @param type $connectIds  用户连接id
+     * @param type $message     发送的消息内容
+     * @return type
+     */
+    public static function send( $connectIds, $message )
+    {
+        $data['to_user'] = !is_array($connectIds) ? implode(',',$connectIds ) : $connectIds;
+        $data['message'] = $message ;
+
+        return Query::posturl( $this->socketSendUrl , $data );
+    }
+
     /**
      * 获取远端code
      * @return type
      */
     private static function remoteCode()
     {
-        $data['appid']  = config('xiesemi.socket.appid');
-        $data['secret'] = config('xiesemi.socket.secret');
-        $url            = config('xiesemi.socket.url');
-        return Query::posturl($url, $data);
+        $data['appid']  = $this->socketAppId;
+        $data['secret'] = $this->socketSecret;
+        return Query::posturl( $this->socketCodeUrl, $data);
     }
     /**
      * 记录本地日志
@@ -66,39 +103,7 @@ class SocketLogic
         $data['status']     = 0;    //待接入
         return UserSocketService::save( $data );
     }
-    /**
-     * 获取需发送消息的连接id数组
-     * @param type $typeCode    消息码
-     */
-    public static function getToConnectIds( $typeCode ,$companyId = 0  )
-    {
-        //根据消息类型获取待发送用户
-        $toUsers = MessageService::getToUsersByType('socket', $typeCode ,$companyId );
 
-        //获取id
-        $con[] = ['user_type','=',1];
-        $con[] = ['user_id','in',$toUsers['front']];
-        $con[] = ['status','in',[0,1]];
-        
-        $con2[] = ['user_type','=',2];
-        $con2[] = ['user_id','in',$toUsers['admin']];
-        $con2[] = ['status','in',[0,1]];
-        $res    = UserSocketService::mainModel()->where( $con )->whereNotNull('connect_id')->column('connect_id');
-        $res2   = UserSocketService::mainModel()->where( $con2 )->whereNotNull('connect_id')->column('connect_id');
-        
-        return array_merge( $res , $res2 );
-    }
-    
-    public static function getToConnectIdsByUserIds( $userIds )
-    {
-        $con[] = ['user_id','in',$userIds];
-        $con[] = ['create_time','>=',date('Y-m-d H:i:s',strtotime('-2 days'))];
-        $con[] = ['status','in',[0,1]];
-        
-        $res = UserSocketService::mainModel()->where( $con )->whereNotNull('connect_id')->column('connect_id');
-
-        return $res;
-    }
     /**
      * 设用户id为off
      * @param type $userId  用户id
@@ -107,8 +112,7 @@ class SocketLogic
     {
         $con[] = ['user_id','=',$userId];
         $con[] = ['create_time','<=',date('Y-m-d H:i:s',strtotime('-1 minute'))];
-        
+
         UserSocketService::mainModel()->where( $con )->update(['status'=>2]);   //2为离线状态。
     }
-    
 }

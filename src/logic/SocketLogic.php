@@ -37,10 +37,10 @@ class SocketLogic
     /*
      * 获取socket连接code
      */
-    public static function code( $type, $userInfo )
+    public function code( $type, $userInfo )
     {
         //获取远端连接code
-        $remote = self::remoteCode();
+        $remote = $this->remoteCode();
         if($remote['code'] == 0){
             //将以前的同user_id数据设置为下线
             self::setOff($userInfo['id']);
@@ -70,7 +70,7 @@ class SocketLogic
      * @param type $message     发送的消息内容
      * @return type
      */
-    public static function send( $connectIds, $message )
+    public function send( $connectIds, $message )
     {
         $data['to_user'] = !is_array($connectIds) ? implode(',',$connectIds ) : $connectIds;
         $data['message'] = $message ;
@@ -82,7 +82,7 @@ class SocketLogic
      * 获取远端code
      * @return type
      */
-    private static function remoteCode()
+    private function remoteCode()
     {
         $data['appid']  = $this->socketAppId;
         $data['secret'] = $this->socketSecret;

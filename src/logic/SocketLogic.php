@@ -72,10 +72,13 @@ class SocketLogic
      */
     public function send( $connectIds, $message )
     {
+        if(!is_array( $connectIds )){
+            $connectIds = [ $connectIds ];
+        }
         $data['to_user'] = implode(',',$connectIds );
         $data['message'] = $message ;
 
-        return Query::posturl( $this->socketSendUrl , $data );
+        return Query::post( $this->socketSendUrl , $data );
     }
 
     /**

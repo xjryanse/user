@@ -2,6 +2,7 @@
 namespace xjryanse\user\service;
 
 use xjryanse\system\interfaces\MainModelInterface;
+use Exception;
 
 /**
  * 用户总表
@@ -32,5 +33,27 @@ class UserService implements MainModelInterface
             $info   = self::find( $con1 );
         }
         return $info;
+    }
+    /**
+     * 设定用户名
+     */
+    public function setUserName( $userName )
+    {
+        //查询用户名是否存在
+        $con[] = ['username','=',$userName];
+        $con[] = ['id','<>',$this->uuid ];
+        $count = self::count($con);
+        //更新
+        if($count){
+            throw new Exception('用户名已存在！');
+        }
+        return $this->update(['username'=>$userName]);
+    }
+    /*
+     * 设定密码
+     */
+    public function setPassword( $password )
+    {
+        return $this->update(['password'=>password_hash( $password, PASSWORD_DEFAULT )]);
     }
 }

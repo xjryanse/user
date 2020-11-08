@@ -8,11 +8,11 @@ use xjryanse\system\service\SystemFileService;
 class User extends Base
 {
     /**
-     * 小程序图标
+     * 用户头像图标
      * @param type $value
      * @return type
      */
-    public function getHeadimgurlAttr( $value )
+    public function getHeadimgAttr( $value )
     {
         return $value ? SystemFileService::getInstance( $value )->get() : $value ;
     }

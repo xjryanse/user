@@ -27,6 +27,14 @@ class UserAccountService implements MainModelInterface
 
         return self::find( $con );
     }    
+    /***
+     * 获取用户账户信息
+     */
+    public static function getUserAccounts($userId)
+    {
+        $con[] = ['user_id','=',$userId ];
+        return self::lists( $con );
+    }
     
     /**
      * 入账更新

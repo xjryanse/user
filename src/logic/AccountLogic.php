@@ -44,7 +44,7 @@ class AccountLogic
             }
         }
     }
-            
+
     /**
      * 入账逻辑
      * @param type $userId      用户id
@@ -74,7 +74,7 @@ class AccountLogic
         UserAccountService::getInstance( $info['id'] )->income( $value );
         return $res;
     }
-    
+
     /*
      * 出账逻辑
      * @param type $userId      用户id
@@ -94,7 +94,7 @@ class AccountLogic
         }
 
         $info = UserAccountService::getByUserAccountType( $userId, $accountType );
-        if( $permitNegative && $info['current'] - abs($value) < 0 ){
+        if( !$permitNegative && $info['current'] - abs($value) < 0 ){
             throw new Exception('账户余额不足');
         }
         //新增流水

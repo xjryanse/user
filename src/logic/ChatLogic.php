@@ -2,7 +2,7 @@
 namespace xjryanse\user\logic;
 
 use xjryanse\user\service\UserChatLogService;
-use think\facade\Cache;
+use Redis;
 /**
  * 聊天逻辑
  */
@@ -10,6 +10,17 @@ class ChatLogic
 {
     //主聊用户id
     use \xjryanse\traits\InstTrait;
+    
+    protected $redis;
+    /**
+     * 注入redis依赖
+     * @param Redis $redis  已经连接好的redis 实例
+     */
+    public function setRedis(Redis $redis)
+    {
+        $this->redis = $redis;
+    }
+    
     /**
      * 获取单用户聊天记录
      * @param type $chatWithId  用户id或群组id
@@ -51,15 +62,32 @@ class ChatLogic
     /*
      * TODO发送消息
      */
-    public function onMessageSend( $chatWithId )
+    public function onMessageSend( $chatWithId , $message )
     {
         $key = $this->chatKeyGenerate( $chatWithId );
         //存缓存
-        
+        return $this->redis->lpush( $key, $message );
     }
     
-            
-            
-
+    /**
+     * 写入数据库
+     */
+    public function writeToDb( $chatWithId )
+    {
+        $key    = $this->chatKeyGenerate( $chatWithId );
+        $data   = [];
+        $index  = 1;
+        //每次只取100条
+        while( $index <= 100){
+            $tmpData = $this->redis->rpop( $key );
+            if($tmpData){
+                $data = json_decode($tmpData);
+            }
+            $index++;
+        }
+        if($data){
+            UserChatLogService::saveAll($data);
+        }
+    }
 
 }

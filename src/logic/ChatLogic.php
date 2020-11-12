@@ -2,7 +2,9 @@
 namespace xjryanse\user\logic;
 
 use xjryanse\user\service\UserChatLogService;
+use xjryanse\logic\SnowFlake;
 use Redis;
+use think\Db;
 /**
  * 聊天逻辑
  */
@@ -32,6 +34,8 @@ class ChatLogic
      */
     public function getLog( $chatWithId ,$type="single" ,$con = [], $orderBy="id desc",$perPage = 20 )
     {
+        //redis中的聊天记录搬到数据库
+        $this->writeToDb($chatWithId);
         //单聊
         if( $type == "single"){
             //当前用户在前
@@ -57,20 +61,28 @@ class ChatLogic
     {
         $array = [ $this->uuid, $chatWithId ];
         sort( $array );
-        return "YDZB_".explode('-', $array );
+        return "YDZB_".implode('-', $array );
     }
     /*
      * TODO发送消息
+     * @param type $chatWithId
+     * @param type $message     ['message','msg_type','event']
+     * @return type
      */
-    public function onMessageSend( $chatWithId , $message )
+    public function onMessageSend( $chatWithId , array $message )
     {
         $key = $this->chatKeyGenerate( $chatWithId );
+        $message['from_user_id']    = $this->uuid;
+        $message['receiver_id']     = $chatWithId;
+        $message['id']              = SnowFlake::generateParticle();
+        $message['msg_time']     = date('Y-m-d H:i:s');
+
         //存缓存
-        return $this->redis->lpush( $key, $message );
+        return $this->redis->lpush( $key, json_encode($message,JSON_UNESCAPED_UNICODE) );
     }
     
     /**
-     * 写入数据库
+     * 聊天记录从redis搬到数据库
      */
     public function writeToDb( $chatWithId )
     {
@@ -80,13 +92,30 @@ class ChatLogic
         //每次只取100条
         while( $index <= 100){
             $tmpData = $this->redis->rpop( $key );
-            if($tmpData){
-                $data = json_decode($tmpData);
+            //只处理json格式的数据包
+            if($tmpData && is_array(json_decode($tmpData,true))){
+                $data[] = json_decode($tmpData,true);
             }
             $index++;
         }
-        if($data){
+        if(!$data){
+            return false;
+        }
+        //开事务保存，保存失败数据恢复redis
+        Db::startTrans();
+        try {
             UserChatLogService::saveAll($data);
+            // 提交事务
+            Db::commit();
+        } catch (\Exception $e) {
+            // 回滚事务
+            Db::rollback();
+            //数据恢复到redis
+            while( count($data) ){
+                $tmpData = array_pop($data);
+                //推回redis
+                $this->redis->rpush( $key , json_encode($tmpData,JSON_UNESCAPED_UNICODE) );
+            }
         }
     }
 

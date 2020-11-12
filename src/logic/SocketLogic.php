@@ -59,7 +59,7 @@ class SocketLogic
         }
         
         $con[] = ['code','=',$code];
-        $info = UserSocketService::mainModel()->where( $con )->whereNull('connect_id')->find();
+        $info = UserSocketService::mainModel()->where( $con )->find();
         if($info){
             return UserSocketService::getInstance( $info['id'] )->update(['connect_id'=>$connectId]);
         }

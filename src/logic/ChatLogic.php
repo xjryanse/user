@@ -36,22 +36,28 @@ class ChatLogic
     {
         //redis中的聊天记录搬到数据库
         $this->writeToDb($chatWithId);
-        //单聊
-        if( $type == "single"){
-            //当前用户在前
-            $concats[]  = [$this->uuid .'-'.$chatWithId ];
-            //当前用户在后
-            $concats[]  = [$chatWithId .'-'.$this->uuid ];
-            //查询聊天记录条件
-            $con[]      = ['concat( from_user_id,receiver_id )','in', $concats ];
-        } 
         //群聊
         if( $type == "group"){
             //查询聊天记录条件：接收人为群id
             $con[]      = ['receiver_id','in', $chatWithId ];
         }
-        $res        = UserChatLogService::paginate( $con, $orderBy, $perPage );
-        return $res;
+        
+        if(UserChatLogService::mainModel()->hasField('app_id')){
+            $con[] = ['app_id','=',session(SESSION_APP_ID)];
+        }
+        $UserChatLog = UserChatLogService::mainModel()->where( $con );
+        //单聊
+        if( $type == "single"){
+            //当前用户在前
+            $concats[]  = '\'' .$this->uuid .'_'.$chatWithId . '\'' ;
+            //当前用户在后
+            $concats[]  = '\'' .$chatWithId .'_'.$this->uuid . '\'';
+            //查询聊天记录条件
+            $UserChatLog->whereRaw("concat( from_user_id,'_',receiver_id ) in (".implode(",",$concats).")" );
+//            $con[]      = ['concat( from_user_id,receiver_id )','in', $concats ];
+        }
+        $res = $UserChatLog->order($orderBy)->paginate( intval($perPage) );
+        return $res ? $res->toArray() : [] ;
     }
     /**
      * 生成聊天key
@@ -61,7 +67,7 @@ class ChatLogic
     {
         $array = [ $this->uuid, $chatWithId ];
         sort( $array );
-        return "YDZB_".implode('-', $array );
+        return "YDZB_".implode('_', $array );
     }
     /*
      * TODO发送消息

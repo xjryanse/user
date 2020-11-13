@@ -81,10 +81,13 @@ class ChatLogic
         $message['from_user_id']    = $this->uuid;
         $message['receiver_id']     = $chatWithId;
         $message['id']              = SnowFlake::generateParticle();
-        $message['msg_time']     = date('Y-m-d H:i:s');
-
+        $message['msg_time']        = date('Y-m-d H:i:s');
+        //上一条消息的时间戳
+        cache( $key.'_LASTCHAT',time());
+        
         //存缓存
-        return $this->redis->lpush( $key, json_encode($message,JSON_UNESCAPED_UNICODE) );
+        $res = $this->redis->lpush( $key, json_encode($message,JSON_UNESCAPED_UNICODE) );
+        return $res ? $message : [];
     }
     
     /**

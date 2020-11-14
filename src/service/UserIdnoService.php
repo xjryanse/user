@@ -14,4 +14,9 @@ class UserIdnoService implements MainModelInterface
     protected static $mainModel;
     protected static $mainModelClass    = '\\xjryanse\\user\\model\\UserIdno';
 
+    public static function getByUserId( $userId )
+    {
+        $con[] = ['user_id','=',$userId];
+        return self::find( $con );
+    }
 }

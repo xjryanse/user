@@ -1,7 +1,6 @@
 <?php
 namespace xjryanse\user\logic;
 
-use xjryanse\logic\Arrays;
 use xjryanse\user\service\UserAuthAccessService;
 use xjryanse\user\service\UserAuthRoleAccessService;
 use xjryanse\user\service\UserAuthUserRoleService;
@@ -16,10 +15,8 @@ class AuthLogic
      * 角色新增
      * @return type
      */
-    public static function getMenu( $param )
+    public static function getMenu( $userId )
     {
-        //用户id
-        $userId     = Arrays::value($param, 'user_id');
         //获取用户的角色
         $roleIds    = UserAuthUserRoleService::userRoleIds($userId);
         //获取角色的权限

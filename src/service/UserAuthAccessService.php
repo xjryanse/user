@@ -24,7 +24,7 @@ class UserAuthAccessService implements MainModelInterface
     /*
      * 将url链接进行了转化
      */
-    public static function listsInfo( $con = [],$order='')
+    public static function listsInfo( $con = [],$order='sort')
     {
         if(self::mainModel()->hasField('app_id')){
             $con[] = ['app_id','=',session(SESSION_APP_ID)];

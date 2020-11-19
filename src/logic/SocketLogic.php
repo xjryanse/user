@@ -8,6 +8,9 @@ use xjryanse\user\service\UserSocketService;
  */
 class SocketLogic
 {
+    const SOCKET_TOCONNECT  = 0;//socket待接入
+    const SOCKET_ONLINE     = 1;//在线
+    const SOCKET_OFFLINE    = 2;//离线
     //应用id
     protected $socketAppId ;
     //应用secret
@@ -16,6 +19,7 @@ class SocketLogic
     protected $socketCodeUrl = "http://socket.xiesemi.cn/connect/app/code" ;
     //socket发送地址
     protected $socketSendUrl = "https://travel.xiesemi.cn:9581";
+    
     /**
      * socket初始实例化
      * @param type $socketAppId     应用appid
@@ -61,7 +65,10 @@ class SocketLogic
         $con[] = ['code','=',$code];
         $info = UserSocketService::mainModel()->where( $con )->find();
         if($info){
-            return UserSocketService::getInstance( $info['id'] )->update(['connect_id'=>$connectId]);
+            $data['connect_id']     = $connectId;
+            $data['connect_status'] = self::SOCKET_ONLINE;    //在线
+            
+            return UserSocketService::getInstance( $info['id'] )->update( $data );
         }
     }
     /**
@@ -103,7 +110,7 @@ class SocketLogic
         $data['code']       = $code;
         $data['user_type']  = $type;
         $data['user_id']    = $userInfo ? $userInfo['id'] : 0 ;
-        $data['status']     = 0;    //待接入
+        $data['connect_status'] = self::SOCKET_TOCONNECT;    //待接入
         return UserSocketService::save( $data );
     }
 
@@ -116,6 +123,20 @@ class SocketLogic
         $con[] = ['user_id','=',$userId];
         $con[] = ['create_time','<=',date('Y-m-d H:i:s',strtotime('-1 minute'))];
 
-        UserSocketService::mainModel()->where( $con )->update(['status'=>2]);   //2为离线状态。
+        $data['connect_status'] = self::SOCKET_OFFLINE;    //离线
+        UserSocketService::mainModel()->where( $con )->update( $data );   //2为离线状态。
+    }
+    /**
+     * 获取连接id
+     */
+    public static function connectId( $userId )
+    {
+        //查指定用户
+        $con[] = ['user_id',        '=',$userId];
+        //查在线
+        $con[] = ['connect_status', '=',self::SOCKET_ONLINE];
+
+        $info = UserSocketService::find( $con );
+        return $info ? $info['connect_id'] : "";
     }
 }

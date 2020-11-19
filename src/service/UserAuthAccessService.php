@@ -29,6 +29,8 @@ class UserAuthAccessService implements MainModelInterface
         if(self::mainModel()->hasField('app_id')){
             $con[] = ['app_id','=',session(SESSION_APP_ID)];
         }
+        //只取启用的
+        $con[] = ['status','=',1];
         $lists = self::mainModel()->where( $con )->order($order)->cache(2)->select();
         foreach($lists as &$v){
             //兼容vue，节点默认不展开

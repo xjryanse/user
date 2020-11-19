@@ -136,7 +136,7 @@ class SocketLogic
         //查在线
         $con[] = ['connect_status', '=',self::SOCKET_ONLINE];
 
-        $info = UserSocketService::find( $con );
+        $info = UserSocketService::mainModel()->where( $con )->order('id desc')->find();
         return $info ? $info['connect_id'] : "";
     }
 }

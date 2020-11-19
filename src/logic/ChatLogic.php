@@ -57,6 +57,7 @@ class ChatLogic
 //            $con[]      = ['concat( from_user_id,receiver_id )','in', $concats ];
         }
         $res = $UserChatLog->order($orderBy)->paginate( intval($perPage) );
+//        $res['lastSql'] = UserChatLogService::mainModel()->getLastSql();
         return $res ? $res->toArray() : [] ;
     }
     /**

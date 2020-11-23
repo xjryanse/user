@@ -23,7 +23,9 @@ class UserChatFriendService implements MainModelInterface
         $con[] = ['user_id','=',$userId];
         $lists = self::lists( $con );
         foreach( $lists as &$v){
-            $v['friendInfo'] = UserService::getInstance( $v['friend_user_id'] )->get();
+            $v['friendInfo']    = UserService::getInstance( $v['friend_user_id'] )->get();
+            //未读消息条数
+            $v['noReadsCount']  = 0 ;
         }
         return $lists;
     }
@@ -52,5 +54,22 @@ class UserChatFriendService implements MainModelInterface
         $con[] = ['user_id','=',$userId];
         $con[] = ['friend_user_id','=',$friendUserId];
         return self::find( $con ) ? true : false;
+    }
+    /**
+     * 设定末条已读消息id
+     * @param type $userId          用户id
+     * @param type $friendUserId    好友id
+     * @param type $lastReadId      末条已读消息id
+     */
+    public static function setLastReadId( $userId,$friendUserId,$lastReadId)
+    {
+        $con[] = ['user_id','=',$userId];
+        $con[] = ['friend_user_id','=',$friendUserId];
+        $info = self::find( $con );
+        if( $info ){
+            $data['last_read_id'] = $lastReadId;
+            return self::getInstance( $info['id'] )->update( $data );
+        }
+        return false;
     }
 }

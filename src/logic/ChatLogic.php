@@ -81,7 +81,7 @@ class ChatLogic
         $key = $this->chatKeyGenerate( $chatWithId );
         $message['from_user_id']    = $this->uuid;
         $message['receiver_id']     = $chatWithId;
-        $message['id']              = SnowFlake::generateParticle();
+        $message['id']              = (string) SnowFlake::generateParticle();
         $message['msg_time']        = date('Y-m-d H:i:s');
         //上一条消息的时间戳
         cache( $key.'_LASTCHAT',time());

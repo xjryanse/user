@@ -39,6 +39,10 @@ class UserChatFriendService implements MainModelInterface
         if(self::isFriend($userId, $friendUserId)){
             return true;
         }
+        //用户为空，则不操作
+        if(!$userId || !$friendUserId){
+            return false;
+        }
         $data['user_id']        = $userId;
         $data['friend_user_id'] = $friendUserId;
         return self::save($data);

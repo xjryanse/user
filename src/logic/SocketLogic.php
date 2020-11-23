@@ -139,4 +139,16 @@ class SocketLogic
         $info = UserSocketService::mainModel()->where( $con )->order('id desc')->find();
         return $info ? $info['connect_id'] : "";
     }
+    /**
+     * 多用户取连接id
+     */
+    public static function connectIds ( $userIds )
+    {
+        //查指定用户
+        $con[] = ['user_id',        'in',   $userIds ];
+        //查在线
+        $con[] = ['connect_status', '=',self::SOCKET_ONLINE];
+        
+        return UserSocketService::column("connect_id", $con);
+    }
 }

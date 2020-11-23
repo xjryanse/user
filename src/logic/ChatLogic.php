@@ -2,6 +2,7 @@
 namespace xjryanse\user\logic;
 
 use xjryanse\user\service\UserChatLogService;
+use xjryanse\user\service\UserChatFriendService;
 use xjryanse\logic\SnowFlake;
 use Redis;
 use think\Db;
@@ -128,5 +129,17 @@ class ChatLogic
             }
         }
     }
-
+    /**
+     * 获取好友列表（带未读消息数）
+     */
+    public function getFriendsWithChatLogCount()
+    {
+        $friends = UserChatFriendService::getFriends( $this->uuid );
+        foreach( $friends as &$v){
+            $this->writeToDb( $v['friend_user_id'] );
+            //未读消息条数
+            $v['noReadsCount']  = UserChatLogService::noReadCount( $this->uuid , $v['friend_user_id'], $v['last_read_id'] );
+        }
+        return $friends;
+    }
 }

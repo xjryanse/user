@@ -24,8 +24,6 @@ class UserChatFriendService implements MainModelInterface
         $lists = self::lists( $con );
         foreach( $lists as &$v){
             $v['friendInfo']    = UserService::getInstance( $v['friend_user_id'] )->get();
-            //未读消息条数
-            $v['noReadsCount']  = 0 ;
         }
         return $lists;
     }

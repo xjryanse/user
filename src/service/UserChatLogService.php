@@ -27,7 +27,9 @@ class UserChatLogService implements MainModelInterface
         //当前用户在后
         $concats[]  = '\'' .$friendId .'_'.$userId . '\'';
         //查询聊天记录条件
-        $con[] = ['id','>',$lastReadMsgId];
+        if($lastReadMsgId){
+            $con[] = ['id','>',$lastReadMsgId];
+        }
         $count = self::mainModel()->whereRaw("concat( from_user_id,'_',receiver_id ) in (".implode(",",$concats).")" )->where($con)->count();
 
         return $count;

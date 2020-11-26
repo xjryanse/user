@@ -3,6 +3,7 @@ namespace xjryanse\user\logic;
 
 use xjryanse\user\service\UserChatLogService;
 use xjryanse\user\service\UserChatFriendService;
+use xjryanse\user\service\UserService;
 use xjryanse\logic\SnowFlake;
 use Redis;
 use think\Db;
@@ -80,6 +81,9 @@ class ChatLogic
     public function onMessageSend( $chatWithId , array $message )
     {
         $key = $this->chatKeyGenerate( $chatWithId );
+        $userInfo = UserService::getInstance($this->uuid)->get();
+        
+        $message['company_id']      = $userInfo ? $userInfo['company_id'] : session(SESSION_COMPANY_ID);
         $message['from_user_id']    = $this->uuid;
         $message['receiver_id']     = $chatWithId;
         $message['id']              = (string) SnowFlake::generateParticle();

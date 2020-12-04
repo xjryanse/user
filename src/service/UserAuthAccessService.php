@@ -2,8 +2,8 @@
 namespace xjryanse\user\service;
 
 use xjryanse\system\interfaces\MainModelInterface;
+use xjryanse\logic\Url;
 use Exception;
-use think\facade\Request;
 /**
  * 权限
  */
@@ -38,9 +38,7 @@ class UserAuthAccessService implements MainModelInterface
             if(!$v['url']){
                 continue;
             }
-            $tmp    = $v['url'];
-            $tmp    .= strstr($tmp, '?') ? '&' : '?';
-            $v['url']  = $tmp .'comKey='.Request::param('comKey','');
+            $v['url']  = Url::addParam($v['url'], ['comKey'=>session( SESSION_COMPANY_KEY ),'sessionid'=> session_id()]);
         }
         return $lists;
     }

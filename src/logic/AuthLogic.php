@@ -40,8 +40,8 @@ class AuthLogic
         $dataIds  = UserAuthRoleDataService::roleDataIds( $roleIds );
         $con[] = ['id','in',$dataIds];
         $con[] = ['table_name','in',$tableName];
-        
-        $authData = UserAuthDataService::lists( $con );
+        //不用lists，避免死循环
+        $authData = UserAuthDataService::mainModel()->where( $con )->select();
         if(!$authData){
             return [];
         }

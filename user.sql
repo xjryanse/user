@@ -1,3 +1,4 @@
+
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
@@ -178,6 +179,34 @@ CREATE TABLE `w_user_auth_access`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '用户权限' ROW_FORMAT = Compact;
 
 -- ----------------------------
+-- Table structure for w_user_auth_data
+-- ----------------------------
+
+CREATE TABLE `w_user_auth_data`  (
+  `id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `app_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '',
+  `company_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '',
+  `name` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '数据权限名：业务员只能看自己的商标',
+  `table_name` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '数据表',
+  `field_con` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '过滤条件',
+  `sort` int(11) NULL DEFAULT 1000 COMMENT '排序',
+  `status` tinyint(1) NULL DEFAULT 1 COMMENT '状态(0禁用,1启用)',
+  `has_used` tinyint(1) NULL DEFAULT 0 COMMENT '有使用(0否,1是)',
+  `is_lock` tinyint(1) NULL DEFAULT 0 COMMENT '锁定（0：未锁，1：已锁）',
+  `is_delete` tinyint(1) NULL DEFAULT 0 COMMENT '锁定（0：未删，1：已删）',
+  `remark` text CHARACTER SET utf8 COLLATE utf8_general_ci NULL COMMENT '备注',
+  `creater` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '创建者，user表',
+  `updater` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '更新者，user表',
+  `create_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
+  `update_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `app_id`(`app_id`) USING BTREE,
+  INDEX `company_id`(`company_id`) USING BTREE,
+  INDEX `create_time`(`create_time`) USING BTREE,
+  INDEX `update_time`(`update_time`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '数据权限' ROW_FORMAT = Compact;
+
+-- ----------------------------
 -- Table structure for w_user_auth_role
 -- ----------------------------
 
@@ -235,6 +264,35 @@ CREATE TABLE `w_user_auth_role_access`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '角色权限' ROW_FORMAT = Compact;
 
 -- ----------------------------
+-- Table structure for w_user_auth_role_data
+-- ----------------------------
+
+CREATE TABLE `w_user_auth_role_data`  (
+  `id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `app_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '',
+  `company_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '',
+  `role_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '角色id',
+  `data_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '数据权限项id',
+  `sort` int(11) NULL DEFAULT 1000 COMMENT '排序',
+  `status` tinyint(1) NULL DEFAULT 1 COMMENT '状态(0禁用,1启用)',
+  `has_used` tinyint(1) NULL DEFAULT 0 COMMENT '有使用(0否,1是)',
+  `is_lock` tinyint(1) NULL DEFAULT 0 COMMENT '锁定（0：未锁，1：已锁）',
+  `is_delete` tinyint(1) NULL DEFAULT 0 COMMENT '锁定（0：未删，1：已删）',
+  `remark` text CHARACTER SET utf8 COLLATE utf8_general_ci NULL COMMENT '备注',
+  `creater` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '创建者，user表',
+  `updater` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '更新者，user表',
+  `create_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
+  `update_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `app_id`(`app_id`) USING BTREE,
+  INDEX `company_id`(`company_id`) USING BTREE,
+  INDEX `role_id`(`role_id`) USING BTREE,
+  INDEX `access_id`(`data_id`) USING BTREE,
+  INDEX `create_time`(`create_time`) USING BTREE,
+  INDEX `update_time`(`update_time`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '角色权限' ROW_FORMAT = Compact;
+
+-- ----------------------------
 -- Table structure for w_user_auth_user_role
 -- ----------------------------
 
@@ -273,8 +331,38 @@ CREATE TABLE `w_user_chat_friend`  (
   `company_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '',
   `user_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '用户id',
   `friend_user_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '朋友id',
+  `last_read_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '末条已读消息id：(超过该id的为未读消息)',
   `group_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '分组id',
   `mark` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '用户对好友的备注',
+  `sort` int(11) NULL DEFAULT 1000 COMMENT '排序',
+  `status` tinyint(1) NULL DEFAULT 1 COMMENT '状态(0禁用,1启用)',
+  `has_used` tinyint(1) NULL DEFAULT 0 COMMENT '有使用(0否,1是)',
+  `is_lock` tinyint(1) NULL DEFAULT 0 COMMENT '锁定（0：未锁，1：已锁）',
+  `is_delete` tinyint(1) NULL DEFAULT 0 COMMENT '锁定（0：未删，1：已删）',
+  `remark` text CHARACTER SET utf8 COLLATE utf8_general_ci NULL COMMENT '备注',
+  `creater` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '创建者，user表',
+  `updater` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '更新者，user表',
+  `create_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
+  `update_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `user_id`(`user_id`, `friend_user_id`) USING BTREE,
+  INDEX `app_id`(`app_id`) USING BTREE,
+  INDEX `company_id`(`company_id`) USING BTREE,
+  INDEX `create_time`(`create_time`) USING BTREE,
+  INDEX `update_time`(`update_time`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '聊天系统好友关系表' ROW_FORMAT = Compact;
+
+-- ----------------------------
+-- Table structure for w_user_chat_group
+-- ----------------------------
+
+CREATE TABLE `w_user_chat_group`  (
+  `id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `app_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '',
+  `company_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '',
+  `group_name` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '群聊名称',
+  `group_icon` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '群聊图标',
+  `lead_user_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '群主id',
   `sort` int(11) NULL DEFAULT 1000 COMMENT '排序',
   `status` tinyint(1) NULL DEFAULT 1 COMMENT '状态(0禁用,1启用)',
   `has_used` tinyint(1) NULL DEFAULT 0 COMMENT '有使用(0否,1是)',
@@ -290,7 +378,7 @@ CREATE TABLE `w_user_chat_friend`  (
   INDEX `company_id`(`company_id`) USING BTREE,
   INDEX `create_time`(`create_time`) USING BTREE,
   INDEX `update_time`(`update_time`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '聊天系统好友关系表' ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '聊天系统群表' ROW_FORMAT = Compact;
 
 -- ----------------------------
 -- Table structure for w_user_chat_log
@@ -320,7 +408,11 @@ CREATE TABLE `w_user_chat_log`  (
   INDEX `app_id`(`app_id`) USING BTREE,
   INDEX `company_id`(`company_id`) USING BTREE,
   INDEX `create_time`(`create_time`) USING BTREE,
-  INDEX `update_time`(`update_time`) USING BTREE
+  INDEX `update_time`(`update_time`) USING BTREE,
+  INDEX `msg_time`(`msg_time`) USING BTREE,
+  INDEX `msg_type`(`msg_type`) USING BTREE,
+  INDEX `from_user_id`(`from_user_id`, `receiver_id`) USING BTREE,
+  INDEX `receiver_id`(`receiver_id`, `from_user_id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '聊天记录表' ROW_FORMAT = Compact;
 
 -- ----------------------------
@@ -450,6 +542,41 @@ CREATE TABLE `w_user_login_log`  (
   INDEX `create_time`(`create_time`) USING BTREE,
   INDEX `update_time`(`update_time`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '用户登录日志' ROW_FORMAT = Compact;
+
+-- ----------------------------
+-- Table structure for w_user_notice
+-- ----------------------------
+
+CREATE TABLE `w_user_notice`  (
+  `id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `app_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '',
+  `company_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '',
+  `msg_type` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '信息类型：fr_broad用户广播；adm_broad后台广播；target指定用户',
+  `msg_cate_code` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '消息分类码',
+  `to_user_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '当信息类型为 target时，有用。',
+  `content` text CHARACTER SET utf8 COLLATE utf8_general_ci NULL COMMENT '信息内容',
+  `url` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '信息跳链',
+  `from_table` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '来源表',
+  `from_table_id` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '来源表id',
+  `msg_time` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '通知时间',
+  `sort` int(11) NULL DEFAULT 1000 COMMENT '排序',
+  `status` tinyint(1) NULL DEFAULT 1 COMMENT '状态(0禁用,1启用)',
+  `has_used` tinyint(1) NULL DEFAULT 0 COMMENT '有使用(0否,1是)',
+  `is_lock` tinyint(1) NULL DEFAULT 0 COMMENT '锁定（0：未锁，1：已锁）',
+  `is_delete` tinyint(1) NULL DEFAULT 0 COMMENT '锁定（0：未删，1：已删）',
+  `remark` text CHARACTER SET utf8 COLLATE utf8_general_ci NULL COMMENT '备注',
+  `creater` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '创建者，user表',
+  `updater` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT '更新者，user表',
+  `create_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
+  `update_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `app_id`(`app_id`) USING BTREE,
+  INDEX `company_id`(`company_id`) USING BTREE,
+  INDEX `msg_type`(`msg_type`) USING BTREE,
+  INDEX `from_table_id`(`from_table_id`) USING BTREE,
+  INDEX `create_time`(`create_time`) USING BTREE,
+  INDEX `update_time`(`update_time`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '通知消息列表' ROW_FORMAT = Compact;
 
 -- ----------------------------
 -- Table structure for w_user_session

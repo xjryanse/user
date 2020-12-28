@@ -15,6 +15,20 @@ class UserAccountService implements MainModelInterface {
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAccount';
 
+    /*
+     * 用户id和账户类型创建，一个类型只能有一个账户
+     */
+    public static function createUserAccount( $userId, $accountType )
+    {
+        $con[] = ['user_id','=',$userId];
+        $con[] = ['account_type','=',$accountType];
+        
+        $data = [];
+        $data['user_id']        = $userId;
+        $data['account_type']   = $accountType;
+        return self::count($con) ? false : self::save( $data );
+    }
+    
     /**
      * 根据用户和账户类型取单条数据
      * @param type $userId

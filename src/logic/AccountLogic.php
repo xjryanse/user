@@ -36,11 +36,8 @@ class AccountLogic
         //循环判断，未创建则创建
         foreach($keys as $key){
             if(!isset($accounts[$key])){
-                //创建
-                $data = [];
-                $data['user_id']        = $userId;
-                $data['account_type']   = $key;
-                UserAccountService::save( $data );
+                //创建用户账户
+                UserAccountService::createUserAccount($userId, $key);
             }
         }
     }

@@ -2,9 +2,9 @@
 
 namespace xjryanse\user\service;
 
+use xjryanse\logic\DbExtraData;
 use xjryanse\system\interfaces\MainModelInterface;
 use Exception;
-
 /**
  * 用户总表
  */
@@ -12,14 +12,90 @@ class UserService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
+    use \xjryanse\traits\SubServiceTrait;
 
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\User';
+    /**
+     * 额外详情信息
+     */
+    protected static function extraDetail( &$item ,$uuid )
+    {
+        //用户账户余额
+        DbExtraData::oneToMoreByKey($item, UserAccountService::mainModel()->getTable(), 'user_id', $uuid, 'account_type', 'current');
+        //用户账户账号
+        DbExtraData::oneToMoreByKey($item, UserAccountService::mainModel()->getTable(), 'user_id', $uuid, 'account_type', 'id');
+        //①添加身份证信息
+        $subInfos = UserIdnoService::getInstance( $uuid )->getSubFieldData();
+        foreach($subInfos as $k=>$v){
+            $item->$k = $v;
+        }
+        return $item;
+    }
+    
+    
+    /**
+     * 分页的查询
+     * @param type $con
+     * @param type $order
+     * @param type $perPage
+     * @return type
+     */
+    public static function paginate( $con = [],$order='',$perPage=10)
+    {
+        $conAll = array_merge( $con ,self::commCondition() );
 
+        $res = self::mainModel()->where( $conAll )->order($order)->cache(2)->paginate( intval($perPage) )
+                ->each(function($item, $key){
+                    //额外添加详情信息
+                    self::extraDetail($item, $item['id']);
+                });
+        
+        return $res ? $res->toArray() : [] ;        
+    }    
+    
+    public function info( $cache = 5  )
+    {
+        $info = self::mainModel()->where('id',$this->uuid)->cache( $cache )->find();
+        //额外添加详情信息
+        self::extraDetail($info, $info['id']);
+        return $info;
+    }
+    /**
+     * 额外保存身份信息
+     * @param array $data
+     * @return type
+     */
+    public static function save( array $data)
+    {
+        $res = self::commSave($data);
+        $res['user_id'] = $res['id'];
+        UserIdnoService::save($data);
+        return $res;
+    }
+    /**
+     * 额外保存身份信息
+     * @param array $data
+     * @return type
+     */
+    public function update( array $data)
+    {
+        $res = $this->commUpdate($data);
+        //有则更新，无则新增
+        if(UserIdnoService::getInstance( $this->uuid )->get()){
+            UserIdnoService::getInstance( $this->uuid )->update( $data );
+        } else {
+            $data['id']         = $this->uuid;
+            $data['user_id']    = $this->uuid;
+
+            UserIdnoService::save($data);
+        }
+        return $res;
+    }
+    
     /*
      * 手机号码取用户信息
      */
-
     public static function getUserInfoByPhone($phone) {
         if (!$phone) {
             return false;

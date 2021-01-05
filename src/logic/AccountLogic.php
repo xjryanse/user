@@ -1,13 +1,15 @@
 <?php
 namespace xjryanse\user\logic;
 
+use xjryanse\system\interfaces\AccountLogicInterface;
+
 use xjryanse\user\service\UserAccountService;
 use xjryanse\user\service\UserAccountLogService;
 use Exception;
 /**
  * 账户逻辑
  */
-class AccountLogic
+class AccountLogic implements AccountLogicInterface
 {
     /**
      * 按userid取值，按key替换。

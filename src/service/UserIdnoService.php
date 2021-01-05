@@ -11,10 +11,21 @@ class UserIdnoService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
+    use \xjryanse\traits\SubServiceTrait;
 
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserIdno';
-
+    //分表字段
+    protected static $subFields = ['phone','realname','id_no','address','birthday','sex','nation','pic_face','pic_back','real_face'];
+    
+    public static function save( array $data)
+    {
+        if(!isset( $data['id']) && isset($data['user_id']) && $data['user_id']){
+            $data['id'] = $data['user_id'];
+        }
+        return self::commSave( $data );
+    }
+    
     public static function getByUserId($userId) {
         $con[] = ['user_id', '=', $userId];
         return self::find($con);

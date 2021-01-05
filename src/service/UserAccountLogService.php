@@ -16,6 +16,22 @@ class UserAccountLogService extends Base implements MainModelInterface {
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAccountLog';
 
     /**
+     * 来源表和来源id查是否有记录：
+     * 一般用于判断该笔记录是否已入账，避免重复入账
+     * @param type $fromTable   来源表
+     * @param type $fromTableId 来源表id
+     */
+    public static function hasLog( $fromTable, $fromTableId )
+    {
+        //`from_table` varchar(255) DEFAULT '' COMMENT '来源表',
+        //`from_table_id` varchar(32) DEFAULT '' COMMENT '来源表id',
+        $con[] = ['from_table','=',$fromTable];
+        $con[] = ['from_table_id','=',$fromTableId];
+        
+        return self::count($con) ? self::find( $con ) : false;
+    }
+    
+    /**
      *
      */
     public function fId() {

@@ -32,35 +32,7 @@ class UserService implements MainModelInterface {
         }
         return $item;
     }
-    
-    
-    /**
-     * 分页的查询
-     * @param type $con
-     * @param type $order
-     * @param type $perPage
-     * @return type
-     */
-    public static function paginate( $con = [],$order='',$perPage=10)
-    {
-        $conAll = array_merge( $con ,self::commCondition() );
 
-        $res = self::mainModel()->where( $conAll )->order($order)->cache(2)->paginate( intval($perPage) )
-                ->each(function($item, $key){
-                    //额外添加详情信息
-                    self::extraDetail($item, $item['id']);
-                });
-        
-        return $res ? $res->toArray() : [] ;        
-    }    
-    
-    public function info( $cache = 5  )
-    {
-        $info = self::mainModel()->where('id',$this->uuid)->cache( $cache )->find();
-        //额外添加详情信息
-        self::extraDetail($info, $info['id']);
-        return $info;
-    }
     /**
      * 额外保存身份信息
      * @param array $data

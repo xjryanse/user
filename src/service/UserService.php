@@ -15,12 +15,13 @@ class UserService implements MainModelInterface {
     use \xjryanse\traits\SubServiceTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass = '\\xjryanse\\user\\model\\User';
+    protected static $mainModelClass = '\\xjryanse\\user\\model\\User';    
     /**
      * 额外详情信息
      */
     protected static function extraDetail( &$item ,$uuid )
     {
+        self::commExtraDetail($item, $uuid);
         //用户账户余额
         DbExtraData::oneToMoreByKey($item, UserAccountService::mainModel()->getTable(), 'user_id', $uuid, 'account_type', 'current');
         //用户账户账号
@@ -197,7 +198,10 @@ class UserService implements MainModelInterface {
     public function fBirthday() {
         return $this->getFFieldValue(__FUNCTION__);
     }
-
+    
+    public function fBusierId() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
     /**
      * 身份证号
      */

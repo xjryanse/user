@@ -16,6 +16,29 @@ class UserService implements MainModelInterface {
 
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\User';    
+    
+    /**
+     * 分页（软删）
+     * @param type $con
+     * @param type $order
+     * @param type $perPage
+     * @param type $having
+     * @return type
+     */
+    public static function paginate( $con = [],$order='',$perPage=10,$having = '')
+    {
+        $con[] = ['is_delete','=',0];
+        return self::commPaginate($con, $order, $perPage, $having);
+    }    
+    /**
+     * 软删
+     * @return type
+     */
+    public function delete()
+    {
+        $data['is_delete'] = 1;
+        return $this->commUpdate($data);
+    }    
     /**
      * 额外详情信息
      */

@@ -44,6 +44,7 @@ class UserService implements MainModelInterface {
      */
     protected static function extraDetail( &$item ,$uuid )
     {
+        if(!$item){ return false;}
         self::commExtraDetail($item, $uuid);
         //用户账户余额
         DbExtraData::oneToMoreByKey($item, UserAccountService::mainModel()->getTable(), 'user_id', $uuid, 'account_type', 'current');
@@ -54,6 +55,13 @@ class UserService implements MainModelInterface {
         foreach($subInfos as $k=>$v){
             $item->$k = $v;
         }
+        //作为业务员的用户数据统计
+        $con[] = ['busier_id','=',$uuid];
+        $item->SCbusier_id      = self::count( $con );
+        //作为推荐人的用户数据统计
+        $con1[] = ['rec_user_id','=',$uuid];
+        $item->SCrec_user_id    = self::count( $con1 );
+        
         return $item;
     }
 

@@ -21,6 +21,11 @@ class AuthLogic
     {
         //获取用户的角色
         $roleIds    = UserAuthUserRoleService::userRoleIds($userId);
+        return self::roleMenus($roleIds);
+    }
+    
+    public static function roleMenus( $roleIds )
+    {
         //获取角色的权限
         $accessIds  = UserAuthRoleAccessService::roleAccessIds( $roleIds );
         $con[] = ['id','in',$accessIds];
@@ -28,7 +33,6 @@ class AuthLogic
 
         return (new self())->makeTree($accesses);
     }
-
     /**
      * 数据权限过滤查询条件
      */

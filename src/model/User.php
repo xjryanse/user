@@ -25,4 +25,7 @@ class User extends Base {
         return self::setImgVal($value);
     }
 
+    public function setLastLogintimeAttr($value) {
+        return self::setTimeVal($value);
+    }    
 }

@@ -18,6 +18,20 @@ class UserIdnoService implements MainModelInterface {
     //分表字段
     protected static $subFields = ['phone','realname','id_no','address','birthday','sex','nation','pic_face','pic_back','real_face'];
     
+    /**
+     * 额外输入信息
+     */
+    public static function extraAfterSave( &$data, $uuid ){
+        $info = self::getInstance($uuid)->get(0);
+        UserService::mainModel()->where('id',$uuid)->update(['realname'=>$info['realname']]);
+    }
+    /**
+     * 额外输入信息
+     */
+    public static function extraAfterUpdate( &$data, $uuid ){
+        return self::extraAfterSave( $data, $uuid );
+    }
+
     public static function save( array $data)
     {
         if(!isset( $data['id']) && isset($data['user_id']) && $data['user_id']){

@@ -32,7 +32,7 @@ class UserIdnoService implements MainModelInterface {
         return self::extraAfterSave( $data, $uuid );
     }
 
-    public static function save( array $data)
+    public static function save( $data)
     {
         if(!isset( $data['id']) && isset($data['user_id']) && $data['user_id']){
             $data['id'] = $data['user_id'];

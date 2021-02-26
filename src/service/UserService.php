@@ -70,7 +70,7 @@ class UserService implements MainModelInterface {
      * @param array $data
      * @return type
      */
-    public static function save( array $data)
+    public static function save( $data)
     {
         $res = self::commSave($data);
         $res['user_id'] = $res['id'];

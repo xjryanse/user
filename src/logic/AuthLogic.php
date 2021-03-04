@@ -51,7 +51,7 @@ class AuthLogic
         }
         $resCon = [];
         foreach($authData as $v){
-            $jsonStr = str_replace('{$user_id}', $userId, $v['field_con']);
+            $jsonStr = str_replace('{$sessionUserId}', $userId, $v['field_con']);
             $resCon = array_merge( $resCon,json_decode($jsonStr));
         }
         return $resCon;

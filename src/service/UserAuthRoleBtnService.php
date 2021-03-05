@@ -3,43 +3,30 @@
 namespace xjryanse\user\service;
 
 use xjryanse\system\interfaces\MainModelInterface;
-use Exception;
 
 /**
- * 角色
+ * 角色权限
  */
-class UserAuthRoleService implements MainModelInterface {
+class UserAuthRoleBtnService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthRole';
+    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthRoleBtn';
 
-    public static function saveCheck(array $data) {
-        if (!arrayHasValue($data, 'name')) {
-            throw new Exception('角色名不能为空');
-        }
-    }
-
-    public function extraPreDelete(){
-        $con[]      = ['role_id','=',$this->uuid];
-        $userRole   = UserAuthUserRoleService::find( $con );
-        if( $userRole ){
-            $userName = UserService::getInstance( $userRole['user_id'] )->fUsername();
-            throw new Exception($userName.'已使用该角色，不可操作');
-        }
-    }
-    
     /**
-     * 有用户使用该角色
+     * 角色的按钮权限id数组
      */
-    public function hasUser()
-    {
-        $con[]      = ['role_id','=',$this->uuid];
-        $roleCount  = UserAuthUserRoleService::mainModel()->where( $con )->count();
-        return $roleCount ? true : false;
+    public static function roleBtnIds($roleIds) {
+        $con[] = ['role_id', 'in', $roleIds];
+        //只查有效
+        $con[] = ['status', '=', 1];
+        $con[] = ['app_id', '=', session(SESSION_APP_ID)];
+
+        return self::mainModel()->where($con)->distinct('btn_id')->column('btn_id');
     }
+
     /**
      *
      */
@@ -62,16 +49,16 @@ class UserAuthRoleService implements MainModelInterface {
     }
 
     /**
-     * 角色名
+     * 角色id
      */
-    public function fName() {
+    public function fRoleId() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     * 权限类型：normal普通，subsuper二级超管
+     * 数据权限项id
      */
-    public function fType() {
+    public function fDataId() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 

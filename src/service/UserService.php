@@ -4,6 +4,7 @@ namespace xjryanse\user\service;
 
 use xjryanse\logic\DbExtraData;
 use xjryanse\system\interfaces\MainModelInterface;
+use xjryanse\logic\Arrays;
 use Exception;
 /**
  * 用户总表
@@ -16,6 +17,25 @@ class UserService implements MainModelInterface {
 
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\User';    
+    
+    /**
+     * 额外保存信息
+     * @param type $data
+     * @param type $uuid
+     */
+    public static function extraPreSave( &$data, $uuid)
+    {
+        $phone = Arrays::value( $data, 'phone');
+        $con[] = ['phone','=',$phone];
+        $count = self::count( $con );
+        if( $count ){
+            throw new Exception('该手机号码已注册');
+        }
+        if(!Arrays::value($data,"busier_id")){
+            $data['busier_id'] = session(SESSION_USER_ID);
+        }
+        return $data;
+    }
     
     /**
      * 分页（软删）

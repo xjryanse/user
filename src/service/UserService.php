@@ -28,7 +28,7 @@ class UserService implements MainModelInterface {
         $phone = Arrays::value( $data, 'phone');
         $con[] = ['phone','=',$phone];
         $count = self::count( $con );
-        if( $count ){
+        if( $count && $phone ){
             throw new Exception('该手机号码已注册');
         }
         if(!Arrays::value($data,"busier_id")){

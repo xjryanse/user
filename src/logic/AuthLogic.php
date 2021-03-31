@@ -35,20 +35,31 @@ class AuthLogic
     }
     /**
      * 数据权限过滤查询条件
+     * @param type $userId
+     * @param type $tableName
+     * @param type $strict      硬性过滤
+     * @return type
      */
-    public static function dataCon( $userId , $tableName )
+    public static function dataCon( $userId , $tableName ,$strict = false)
     {
+        if(!$userId){
+            return [];
+        }
         //获取用户的角色
         $roleIds    = UserAuthUserRoleService::userRoleIds($userId);
         //获取角色的数据权限
         $dataIds  = UserAuthRoleDataService::roleDataIds( $roleIds );
         $con[] = ['id','in',$dataIds];
         $con[] = ['table_name','in',$tableName];
+        if($strict){
+            $con[] = ['strict','=',1];
+        }
         //不用lists，避免死循环
         $authData = UserAuthDataService::mainModel()->where( $con )->select();
         if(!$authData){
             return [];
         }
+        
         $resCon = [];
         foreach($authData as $v){
             $jsonStr = str_replace('{$sessionUserId}', $userId, $v['field_con']);

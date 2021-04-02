@@ -30,7 +30,16 @@ class UserAccountLogService extends Base implements MainModelInterface {
         
         return self::count($con) ? self::find( $con ) : false;
     }
+
+    public static function extraAfterSave(&$data, $uuid) {
+        //更新账户余额
+        UserAccountService::getInstance( $uuid )->updateRemain();
+    }
     
+    public static function extraAfterUpdate(&$data, $uuid) {
+        //更新账户余额
+        UserAccountService::getInstance( $uuid )->updateRemain();
+    }
     /**
      *
      */

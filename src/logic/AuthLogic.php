@@ -17,19 +17,33 @@ class AuthLogic
      * 角色新增
      * @return type
      */
-    public static function getMenu( $userId )
+    public static function getMenu( $userId,$admType='' )
     {
         //获取用户的角色
         $roleIds    = UserAuthUserRoleService::userRoleIds($userId);
-        return self::roleMenus($roleIds);
+        return self::roleMenus($roleIds,$admType);
     }
     
-    public static function roleMenus( $roleIds )
+    /**
+     * 
+     * @param type $roleIds
+     * @param type $admType 管理类型
+     * @return type
+     */
+    public static function roleMenus( $roleIds ,$admType)
     {
         //获取角色的权限
         $accessIds  = UserAuthRoleAccessService::roleAccessIds( $roleIds );
         $con[] = ['id','in',$accessIds];
-        $accesses   = UserAuthAccessService::listsInfo($con);
+        if( UserAuthAccessService::mainModel()->hasField('only_role')){
+            $con[] = ['only_role','in',['',$admType]];
+        }
+        //超管直接展示全部菜单：20210402
+        if( $admType == 'super'){
+            $accesses   = UserAuthAccessService::listsInfo();
+        } else {
+            $accesses   = UserAuthAccessService::listsInfo($con);
+        }
 
         return (new self())->makeTree($accesses);
     }

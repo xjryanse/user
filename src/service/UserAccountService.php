@@ -15,6 +15,16 @@ class UserAccountService implements MainModelInterface {
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAccount';
 
+    /**
+     * 更新余额
+     */
+    public function updateRemain()
+    {
+        $con[] = ['account_id','=',$this->uuid];
+        $money = UserAccountLogService::mainModel()->where($con)->sum('change');
+        return self::mainModel()->where('id',$this->uuid)->update(['current'=>$money]);
+    }
+    
     /*
      * 用户id和账户类型创建，一个类型只能有一个账户
      */

@@ -3,6 +3,7 @@
 namespace xjryanse\user\service;
 
 use xjryanse\system\interfaces\MainModelInterface;
+use xjryanse\logic\Arrays;
 
 /**
  * 用户账户流水
@@ -16,12 +17,40 @@ class UserAccountLogService extends Base implements MainModelInterface {
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAccountLog';
 
     /**
+     * 入账逻辑
+     * @param type $userId      用户id
+     * @param type $accountType 账户类型
+     * @param type $value       变动值
+     * @param type $data        额外数据
+     * @return type
+     */
+    public static function doIncome( $userId, $accountType, $value, $data= [] )
+    {
+        //事务校验
+        UserAccountService::checkTransaction();
+        //账户校验
+        if(!UserAccountService::getByUserAccountType($userId, $accountType)){
+            self::accountCreate($userId, $accountType);
+        }
+
+        $info = UserAccountService::getByUserAccountType( $userId, $accountType );
+        //新增流水
+        $data['user_id']        = $userId;
+        $data['account_id']     = $info['id'];
+        $data['before_quota']   = $info['current'];
+        $data['change']         = $value;
+        $data['current_quota']  = $info['current'] + $value;
+        $res = self::save( $data );
+        return $res;
+    }    
+    
+    /**
      * 来源表和来源id查是否有记录：
      * 一般用于判断该笔记录是否已入账，避免重复入账
      * @param type $fromTable   来源表
      * @param type $fromTableId 来源表id
      */
-    public static function hasLog( $fromTable, $fromTableId )
+    public static function hasLog( $fromTable, $fromTableId ,$con = [] )
     {
         //`from_table` varchar(255) DEFAULT '' COMMENT '来源表',
         //`from_table_id` varchar(32) DEFAULT '' COMMENT '来源表id',
@@ -32,13 +61,17 @@ class UserAccountLogService extends Base implements MainModelInterface {
     }
 
     public static function extraAfterSave(&$data, $uuid) {
+        $info       = self::getInstance( $uuid )->get();
+        $accountId  = Arrays::value($info, 'account_id');
         //更新账户余额
-        UserAccountService::getInstance( $uuid )->updateRemain();
+        UserAccountService::getInstance( $accountId )->updateRemain();
     }
     
     public static function extraAfterUpdate(&$data, $uuid) {
+        $info       = self::getInstance( $uuid )->get();
+        $accountId  = Arrays::value($info, 'account_id');
         //更新账户余额
-        UserAccountService::getInstance( $uuid )->updateRemain();
+        UserAccountService::getInstance( $accountId )->updateRemain();
     }
     /**
      *

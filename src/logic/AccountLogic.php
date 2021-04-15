@@ -12,7 +12,7 @@ use Exception;
 class AccountLogic implements AccountLogicInterface
 {
     /**
-     * 按userid取值，按key替换。
+     * 【逐步淘汰】按userid取值，按key替换。
      * @param type $userId
      */
     public static function getByUserId( $userId )
@@ -23,7 +23,7 @@ class AccountLogic implements AccountLogicInterface
         return array_combine($keys, $values);
     }
     /**
-     * 创建账户
+     * 【逐步淘汰】创建账户
      * @param type $userId  用户id
      * @param type $keys    键
      */
@@ -45,7 +45,7 @@ class AccountLogic implements AccountLogicInterface
     }
 
     /**
-     * 入账逻辑
+     * 【TODO逐步淘汰】入账逻辑
      * @param type $userId      用户id
      * @param type $accountType 账户类型
      * @param type $value       变动值
@@ -75,7 +75,7 @@ class AccountLogic implements AccountLogicInterface
     }
 
     /*
-     * 出账逻辑
+     * 【逐步淘汰】出账逻辑
      * @param type $userId      用户id
      * @param type $accountType 账户类型
      * @param type $value       变动值

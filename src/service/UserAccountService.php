@@ -25,6 +25,40 @@ class UserAccountService implements MainModelInterface {
         return self::mainModel()->where('id',$this->uuid)->update(['current'=>$money]);
     }
     
+    /**
+     * 创建账户
+     * @param type $userId  用户id
+     * @param type $keys    键
+     */
+    public static function accountCreate( $userId ,$keys = [] )
+    {
+        //获取现有账户
+        $accounts = self::getByUserId($userId);
+        //兼容字符串
+        if(!is_array( $keys )){
+            $keys = [ $keys ];
+        }
+        //循环判断，未创建则创建
+        foreach($keys as $key){
+            if(!isset($accounts[$key])){
+                //创建用户账户
+                self::createUserAccount($userId, $key);
+            }
+        }
+    }    
+    
+    /**
+     * 按userid取值，按key替换。
+     * @param type $userId
+     */
+    protected static function getByUserId( $userId )
+    {
+        $values = self::listsByField( 'user_id' , $userId );
+        $values = $values ? $values->toArray() : [] ;
+        $keys   = array_column( $values,'account_type');
+        return array_combine($keys, $values);
+    }    
+    
     /*
      * 用户id和账户类型创建，一个类型只能有一个账户
      */

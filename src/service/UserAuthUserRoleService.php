@@ -26,6 +26,15 @@ class UserAuthUserRoleService implements MainModelInterface {
 
         return self::mainModel()->where($con)->distinct('role_id')->column('role_id');
     }
+    /**
+     * 查看用户是否有某个权限
+     */
+    public static function userHasRole( $userId, $roleId )
+    {
+        $con[] = ['user_id','=',$userId];
+        $con[] = ['role_id','=',$roleId];
+        return self::count( $con );
+    }
 
     /**
      *

@@ -33,7 +33,7 @@ class UserAuthAccessService implements MainModelInterface {
         }
         //只取启用的
         $con[] = ['status', '=', 1];
-        $lists = self::mainModel()->where($con)->order($order)->cache(2)->select();
+        $lists = self::mainModel()->where($con)->order($order)->cache(86400)->select();
         if($lists){
             $lists = $lists->toArray();
         }
@@ -43,7 +43,9 @@ class UserAuthAccessService implements MainModelInterface {
             if (!$v['url']) {
                 continue;
             }
-            $v['url'] = Url::addParam($v['url'], ['comKey' => session(SESSION_COMPANY_KEY), 'sessionid' => session_id()]);
+            if($v['access_group'] == 'admin'){
+                $v['url'] = Url::addParam($v['url'], ['comKey' => session(SESSION_COMPANY_KEY), 'sessionid' => session_id()]);
+            }
         }
         return $lists;
     }

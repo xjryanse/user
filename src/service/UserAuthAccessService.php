@@ -34,6 +34,9 @@ class UserAuthAccessService implements MainModelInterface {
         //只取启用的
         $con[] = ['status', '=', 1];
         $lists = self::mainModel()->where($con)->order($order)->cache(2)->select();
+        if($lists){
+            $lists = $lists->toArray();
+        }
         foreach ($lists as &$v) {
             //兼容vue，节点默认不展开
             $v['vue_expand'] = false;

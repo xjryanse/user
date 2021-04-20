@@ -99,7 +99,7 @@ class ScoreLogic
         $rule       = SystemRuleService::getInstance( $ruleId )->get();
         //签到得积分
         $data               = Datetime::periodTime($rule['period'], $rule['period_unit']);
-        $data['user_id']    = $userId;   
+        $data['user_id']    = $userId;
         return $data;
     }
 

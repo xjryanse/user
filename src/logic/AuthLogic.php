@@ -17,11 +17,11 @@ class AuthLogic
      * 角色新增
      * @return type
      */
-    public static function getMenu( $userId,$admType='' )
+    public static function getMenu( $userId,$admType='',$con = [] )
     {
         //获取用户的角色
         $roleIds    = UserAuthUserRoleService::userRoleIds($userId);
-        return self::roleMenus($roleIds,$admType);
+        return self::roleMenus($roleIds,$admType,$con);
     }
     
     /**
@@ -30,7 +30,7 @@ class AuthLogic
      * @param type $admType 管理类型
      * @return type
      */
-    public static function roleMenus( $roleIds ,$admType)
+    public static function roleMenus( $roleIds ,$admType,$con=[])
     {
         //获取角色的权限
         $accessIds  = UserAuthRoleAccessService::roleAccessIds( $roleIds );

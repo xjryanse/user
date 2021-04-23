@@ -3,6 +3,7 @@ namespace xjryanse\user\logic;
 
 use xjryanse\system\service\SystemRuleService;
 use xjryanse\logic\Datetime;
+use xjryanse\user\service\UserAccountService;
 use xjryanse\user\service\UserAccountLogService;
 use xjryanse\system\service\SystemCateService;
 use xjryanse\system\service\SystemConditionService;
@@ -96,10 +97,14 @@ class ScoreLogic
      */
     protected static function ruleGetData( $ruleId, $userId )
     {
-        $rule       = SystemRuleService::getInstance( $ruleId )->get();
+        $scoreAccount       = UserAccountService::getByUserAccountType($userId, 'score');
+        $rule               = SystemRuleService::getInstance( $ruleId )->get();
+        $lastFromTableId    = UserAccountLogService::lastFromTableId($scoreAccount['id'],$rule['rule_key'] ,'');
         //签到得积分
         $data               = Datetime::periodTime($rule['period'], $rule['period_unit']);
-        $data['user_id']    = $userId;
+        $data['lastFromTableId']    = $lastFromTableId;
+        $data['userId']    = $userId;
+        Debug::debug('数据来源scoreLogic::ruleGetData()', $data);
         return $data;
     }
 

@@ -17,6 +17,23 @@ class UserAccountLogService extends Base implements MainModelInterface {
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAccountLog';
 
     /**
+     * 取最后一个来源表id，一般用于校验条件
+     * @param type $accountId   账号
+     * @param type $changeCate  变动类型
+     * @param type $fromTable   表名
+     * @param type $con         条件
+     * @return type
+     */
+    public static function lastFromTableId( $accountId, $changeCate,$fromTable = '',$con=[])
+    {
+        $con[] = ['account_id','=',$accountId];
+        $con[] = ['change_cate','=',$changeCate];
+        if($fromTable){
+            $con[] = ['from_table','=',$fromTable];
+        }
+        return self::mainModel()->where($con)->order('id desc')->value('from_table_id');
+    }
+    /**
      * 入账逻辑
      * @param type $userId      用户id
      * @param type $accountType 账户类型

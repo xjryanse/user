@@ -23,6 +23,7 @@ class ScoreLogic
         $con[] = ['rule_type','=','score'];
         $con[] = ['status','=',1];
         $ruleIds = SystemRuleService::ids( $con );
+        Debug::debug("ScoreLogic::score的规则id",$ruleIds);
         foreach( $ruleIds as $ruleId){
             //校验规则，并添加积分
             self::ruleScoreCheck($ruleId, $userId);
@@ -49,6 +50,7 @@ class ScoreLogic
     protected static function isRuleReached( $ruleId, $userId )
     {
         $data               = self::ruleGetData($ruleId, $userId);
+        Debug::debug('isRuleReached的ruleGetData的值', $data);
         $isReached          = SystemRuleService::getInstance($ruleId)->isRuleReached( $data );
         return $isReached;
     }
@@ -99,6 +101,8 @@ class ScoreLogic
     {
         $scoreAccount       = UserAccountService::getByUserAccountType($userId, 'score');
         $rule               = SystemRuleService::getInstance( $ruleId )->get();
+        Debug::debug('ruleGetData规则信息', $rule);
+        
         $lastFromTableId    = UserAccountLogService::lastFromTableId($scoreAccount['id'],$rule['rule_key'] ,'');
         //签到得积分
         $data               = Datetime::periodTime($rule['period'], $rule['period_unit']);

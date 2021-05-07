@@ -2,8 +2,13 @@
 
 namespace xjryanse\user\service;
 
+use xjryanse\finance\service\FinanceAccountLogService;
+use xjryanse\finance\service\FinanceAccountService;
+use xjryanse\finance\service\FinanceStatementService;
 use xjryanse\system\interfaces\MainModelInterface;
 use xjryanse\logic\Arrays;
+use xjryanse\user\model\UserAccountLog;
+use think\Db;
 
 /**
  * 用户账户流水
@@ -78,10 +83,7 @@ class UserAccountLogService extends Base implements MainModelInterface {
     }
 
     public static function extraAfterSave(&$data, $uuid) {
-        $info       = self::getInstance( $uuid )->get();
-        $accountId  = Arrays::value($info, 'account_id');
-        //更新账户余额
-        UserAccountService::getInstance( $accountId )->updateRemain();
+        self::extraAfterUpdate($data, $uuid);
     }
     
     public static function extraAfterUpdate(&$data, $uuid) {
@@ -89,7 +91,36 @@ class UserAccountLogService extends Base implements MainModelInterface {
         $accountId  = Arrays::value($info, 'account_id');
         //更新账户余额
         UserAccountService::getInstance( $accountId )->updateRemain();
+        $accountType = UserAccountService::getInstance($accountId)->fAccountType();
+        //是余额的，入账一下账户余额
+        if( $accountType == 'money' && $info['statement_id'] && !FinanceAccountLogService::statementHasLog( $info['statement_id'] ) ){
+            Db::startTrans();
+            self::addFinanceAccountLog( $info );
+            Db::commit();
+        }
     }
+    
+    /*
+     * 写入商户
+     */
+    public static function addFinanceAccountLog(UserAccountLog $log)
+    {
+        $statementId            = $log['statement_id'];
+        $statement              = FinanceStatementService::getInstance( $statementId )->get();
+
+        $data['company_id']     = $log['company_id'];
+        $data['user_id']        = $log['user_id'];
+        $data['customer_id']    = Arrays::value($statement, 'customer_id');
+        $data['money']          = Arrays::value($statement, 'need_pay_prize');
+        $data['statement_id']   = $log['statement_id'];
+        $data['reason']         = Arrays::value($statement, 'statement_name');
+        $data['change_type']    = Arrays::value($statement, 'change_type');
+        $data['account_id']     = FinanceAccountService::getIdByAccountType($log['company_id'], 'money');      //线上余额
+        $data['from_table']     = self::mainModel()->getTable();
+        $data['from_table_id']  = $log['id'];
+        return FinanceAccountLogService::save($data);
+    }    
+    
     /**
      *
      */

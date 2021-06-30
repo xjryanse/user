@@ -22,9 +22,10 @@ class UserAuthUserRoleService implements MainModelInterface {
         $con[] = ['user_id', 'in', $userId];
         //只查有效
         $con[] = ['status', '=', 1];
-        $con[] = ['app_id', '=', session(SESSION_APP_ID)];
-
-        return self::mainModel()->where($con)->distinct('role_id')->column('role_id');
+        if (self::mainModel()->hasField('app_id')) {
+            $con[] = ['app_id', '=', session(SESSION_APP_ID)];
+        }
+        return self::mainModel()->where($con)->distinct('role_id')->cache(86400)->column('role_id');
     }
     /**
      * 查看用户是否有某个权限

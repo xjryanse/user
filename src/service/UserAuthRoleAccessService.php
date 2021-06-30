@@ -22,9 +22,11 @@ class UserAuthRoleAccessService implements MainModelInterface {
         $con[] = ['role_id', 'in', $roleIds];
         //只查有效
         $con[] = ['status', '=', 1];
-        $con[] = ['app_id', '=', session(SESSION_APP_ID)];
+        if (self::mainModel()->hasField('app_id')) {
+            $con[] = ['app_id', '=', session(SESSION_APP_ID)];
+        }
 
-        return self::mainModel()->where($con)->distinct('access_id')->column('access_id');
+        return self::mainModel()->where($con)->distinct('access_id')->cache(86400)->column('access_id');
     }
 
     /**

@@ -3,29 +3,33 @@
 namespace xjryanse\user\service;
 
 use xjryanse\system\interfaces\MainModelInterface;
+use xjryanse\system\service\SystemColumnListService;
+use xjryanse\system\service\SystemColumnService;
 
 /**
- * 角色权限
+ * 字段权限
  */
-class UserAuthRoleDataService implements MainModelInterface {
+class UserAuthRoleColumnService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthRoleData';
+    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthRoleColumn';
 
     /**
-     * 角色的数据权限id数组
+     * 角色的按钮权限id数组
      */
-    public static function roleDataIds($roleIds) {
-        $con[] = ['role_id', 'in', $roleIds];
-        //只查有效
-        $con[] = ['status', '=', 1];
-        if (self::mainModel()->hasField('app_id')) {
-            $con[] = ['app_id', '=', session(SESSION_APP_ID)];
-        }
-        return self::mainModel()->where($con)->distinct('data_id')->column('data_id');
+    public static function roleColumnIds($roleIds, $tableName ) {
+        
+        $con[]              = ['table_name','=',$tableName];
+        $columnListTable    = SystemColumnListService::mainModel()->getTable();
+        //指定表名，的字段
+        $columnSql          = SystemColumnService::mainModel()->field('b.id')->where($con)->alias('cc')->join( $columnListTable.' b','cc.id = b.column_id')->buildSql();
+        $cond[]             =   ['role_id','in',$roleIds ];
+        $roleColumnIds      = self::mainModel() ->where($cond) ->alias('role')  ->join($columnSql.' col','col.id = role.column_id') -> column('role.column_id');
+
+        return $roleColumnIds;
     }
 
     /**

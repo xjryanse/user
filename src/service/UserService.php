@@ -36,6 +36,20 @@ class UserService implements MainModelInterface {
         }
         return $data;
     }
+
+    public static function extraPreUpdate( &$data, $uuid)
+    {
+        $phone = Arrays::value( $data, 'phone');
+        if($phone){
+            $con[] = ['phone','=',$phone];
+            $con[] = ['id','<>',$uuid];
+            $existUserInfo = self::find( $con );
+            if( $existUserInfo ){
+                throw new Exception('该手机号码'.$phone.'已被“'.$existUserInfo['username'].'”注册，请更换手机号码重试');
+            }            
+        }
+        return $data;
+    }    
     
     /**
      * 分页（软删）
@@ -45,11 +59,11 @@ class UserService implements MainModelInterface {
      * @param type $having
      * @return type
      */
-    public static function paginate( $con = [],$order='',$perPage=10,$having = '')
+    public static function paginate( $con = [],$order='',$perPage=10,$having = '',$field ="*")
     {
         $con[] = ['is_delete','=',0];
-        return self::commPaginate($con, $order, $perPage, $having);
-    }    
+        return self::commPaginate($con, $order, $perPage, $having,$field);
+    }
     /**
      * 软删
      * @return type
@@ -58,7 +72,7 @@ class UserService implements MainModelInterface {
     {
         $data['is_delete'] = 1;
         return $this->commUpdate($data);
-    }    
+    }
     /**
      * 额外详情信息
      */

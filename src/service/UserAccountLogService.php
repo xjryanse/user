@@ -52,7 +52,7 @@ class UserAccountLogService extends Base implements MainModelInterface {
         UserAccountService::checkTransaction();
         //账户校验
         if(!UserAccountService::getByUserAccountType($userId, $accountType)){
-            self::accountCreate($userId, $accountType);
+            UserAccountService::accountCreate($userId, $accountType);
         }
 
         $info = UserAccountService::getByUserAccountType( $userId, $accountType );

@@ -22,17 +22,17 @@ class LoginLogic
         $con[] = ['username','=', $userName ];
         $con[] = ['company_id','in',session(SESSION_COMPANY_ID)];
 
-        $userInfo = UserService::find( $con );
+        $userInfo = UserService::mainModel()->where( $con )->find();
 
         if(!$userInfo){
             //系统级的超级管理员账户：跨了公司
             $con1[] = ['username','=',$userName];
             $con1[] = ['admin_type','=','super'];       //超级管理账号
-            $userInfo = UserService::find( $con1 );
+            $userInfo = UserService::mainModel()->where($con1)->find( );
         }
 
         if(!$userInfo){
-            throw new Exception('用户不存在');
+            throw new Exception($userName.'用户不存在');
         }
         if(!password_verify($password, $userInfo['password'] )){
             throw new Exception('密码错误!');

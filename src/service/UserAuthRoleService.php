@@ -15,7 +15,16 @@ class UserAuthRoleService implements MainModelInterface {
 
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthRole';
-
+    /**
+     * 默认的权限
+     * @return type
+     */
+    public static function defaultRoleIds()
+    {
+        $con[] = ['is_default','=',1];
+        $con[] = ['company_id','=',session(SESSION_COMPANY_ID)];
+        return self::mainModel()->where($con)->cache(86400)->column('id');
+    }
     public static function saveCheck(array $data) {
         if (!arrayHasValue($data, 'name')) {
             throw new Exception('角色名不能为空');

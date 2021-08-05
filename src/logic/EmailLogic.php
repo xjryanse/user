@@ -3,6 +3,8 @@ namespace xjryanse\user\logic;
 
 use PHPMailer\PHPMailer\PHPMailer;
 use xjryanse\user\service\UserEmailServerService;
+use xjryanse\user\service\UserEmailLogService;
+
 /**
  * 发送邮件逻辑
  */
@@ -58,7 +60,19 @@ class EmailLogic
         $mail->AltBody = '如果邮件客户端不支持HTML则显示此内容';
 
         $res = $mail->send();
+        //记录日志
+        $this->log($toMail, $subject, $body, $attachments,$res);
         return $res;
+    }
+    
+    protected function log($toMail, $subject, $body, $attachments,$result){
+        $data['server_id']  = $this->uuid;
+        $data['to_mail']    = json_encode($toMail,JSON_UNESCAPED_UNICODE);
+        $data['subject']    = $subject;
+        $data['body']       = $body;
+        $data['attachments']    = json_encode($attachments,JSON_UNESCAPED_UNICODE);
+        $data['send_result']    = booleanToNumber($result);
+        return UserEmailLogService::save($data);
     }
 
 }

@@ -50,13 +50,17 @@ class ChatLogic
         $UserChatLog = UserChatLogService::mainModel()->where( $con );
         //单聊
         if( $type == "single"){
-            //当前用户在前
-            $concats[]  = '\'' .$this->uuid .'_'.$chatWithId . '\'' ;
-            //当前用户在后
-            $concats[]  = '\'' .$chatWithId .'_'.$this->uuid . '\'';
-            //查询聊天记录条件
-            $UserChatLog->whereRaw("concat( from_user_id,'_',receiver_id ) in (".implode(",",$concats).")" );
-//            $con[]      = ['concat( from_user_id,receiver_id )','in', $concats ];
+            if($chatWithId){
+                //当前用户在前
+                $concats[]  = '\'' .$this->uuid .'_'.$chatWithId . '\'' ;
+                //当前用户在后
+                $concats[]  = '\'' .$chatWithId .'_'.$this->uuid . '\'';
+                //查询聊天记录条件
+                $UserChatLog->whereRaw("concat( from_user_id,'_',receiver_id ) in (".implode(",",$concats).")" );
+    //            $con[]      = ['concat( from_user_id,receiver_id )','in', $concats ];
+            } else {
+                $UserChatLog->whereRaw("(from_user_id = '".$this->uuid."' or receiver_id = '" .$this->uuid. "')" );
+            }
         }
         $res = $UserChatLog->order($orderBy)->paginate( intval($perPage) );
 //        $res['lastSql'] = UserChatLogService::mainModel()->getLastSql();
@@ -93,6 +97,8 @@ class ChatLogic
         
         //存缓存
         $res = $this->redis->lpush( $key, json_encode($message,JSON_UNESCAPED_UNICODE) );
+        //TODO有漏消息bug，暂时先直接写数据库 待优化-20210720
+        $this->writeToDb($chatWithId);        
         return $res ? $message : [];
     }
     
@@ -145,5 +151,15 @@ class ChatLogic
             $v['noReadsCount']  = UserChatLogService::noReadCount( $this->uuid , $v['friend_user_id'], $v['last_read_id'] );
         }
         return $friends;
+    }
+    /**
+     * 获取redis中的聊天记录
+     * @param type $chatWithId
+     * @return type
+     */
+    public function getRedisLog( $chatWithId ){
+        $key    = $this->chatKeyGenerate( $chatWithId );
+        $data   = $this->redis->lrange($key,0,-1);
+        return ['key'=>$key, 'data' => $data ];
     }
 }

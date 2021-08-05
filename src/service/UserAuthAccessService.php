@@ -36,7 +36,8 @@ class UserAuthAccessService implements MainModelInterface {
         }
         //只取启用的
         $con[] = ['status', '=', 1];
-        $lists = self::mainModel()->where($con)->order($order)->cache(86400)->select();
+        // index 兼容elementui
+        $lists = self::mainModel()->where($con)->field('id,pid,name,icon,access_group,access_type,show_type,url')->order($order)->cache(86400)->select();
         if($lists){
             $lists = $lists->toArray();
         }
@@ -48,6 +49,9 @@ class UserAuthAccessService implements MainModelInterface {
             }
             if($v['access_group'] == 'admin'){
                 $v['url'] = Url::addParam($v['url'], ['comKey' => session(SESSION_COMPANY_KEY), 'sessionid' => session_id()]);
+            }
+            if($v['access_group'] == 'adminx'){
+                $v['url'] = '/'.session(SESSION_COMPANY_KEY).$v['url'];
             }
         }
         return $lists;

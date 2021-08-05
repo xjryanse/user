@@ -5,28 +5,15 @@ namespace xjryanse\user\service;
 use xjryanse\system\interfaces\MainModelInterface;
 
 /**
- * 角色权限
+ * 邮箱日志
  */
-class UserAuthRoleDataService implements MainModelInterface {
+class UserEmailLogService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthRoleData';
-
-    /**
-     * 角色的数据权限id数组
-     */
-    public static function roleDataIds($roleIds) {
-        $con[] = ['role_id', 'in', $roleIds];
-        //只查有效
-        $con[] = ['status', '=', 1];
-        if (self::mainModel()->hasField('app_id')) {
-            $con[] = ['app_id', '=', session(SESSION_APP_ID)];
-        }
-        return self::mainModel()->where($con)->distinct('data_id')->cache(86400)->column('data_id');
-    }
+    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserEmailLog';
 
     /**
      *
@@ -36,9 +23,9 @@ class UserAuthRoleDataService implements MainModelInterface {
     }
 
     /**
-     *
+     * 发件服务端
      */
-    public function fAppId() {
+    public function fServerId() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
@@ -48,18 +35,33 @@ class UserAuthRoleDataService implements MainModelInterface {
     public function fCompanyId() {
         return $this->getFFieldValue(__FUNCTION__);
     }
-
     /**
-     * 角色id
+     * 收件人
+     * 
+     * @return type
      */
-    public function fRoleId() {
+    public function fToMail() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     * 数据权限项id
+     * 邮件标题
      */
-    public function fDataId() {
+    public function fSubject() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 邮件正文呢
+     */
+    public function fBody() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 附件
+     */
+    public function fAttachments() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 

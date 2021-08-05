@@ -3,6 +3,7 @@ namespace xjryanse\user\logic;
 
 use xjryanse\curl\Query;
 use xjryanse\user\service\UserSocketService;
+use Exception;
 /**
  * 与socket系统的对接逻辑
  */
@@ -20,12 +21,14 @@ class SocketLogic
     //socket发送地址
     protected $socketSendUrl = "https://travel.xiesemi.cn:9581";
     
+    protected static $socketInst;
+    
     /**
      * socket初始实例化
      * @param type $socketAppId     应用appid
      * @param type $socketSecret    应用密钥
      */
-    public function __construct( $socketAppId, $socketSecret, $socketCodeUrl="" ,$socketSendUrl = "") {
+    protected function __construct( $socketAppId, $socketSecret, $socketCodeUrl="" ,$socketSendUrl = "") {
         //应用appid
         $this->socketAppId  = $socketAppId;
         //应用密钥
@@ -38,18 +41,54 @@ class SocketLogic
         }
     }
 
+    /**
+     * 获取socket连接实例
+     * @return type
+     */
+    public static function getSocketInst()
+    {
+        if(!self::$socketInst){
+            self::$socketInst = new SocketLogic( 
+                    config('xiesemi.socket.appid')
+                    , config('xiesemi.socket.secret')
+                    , config('xiesemi.socket.codeUrl')
+                    , config('xiesemi.socket.sendUrl')
+                );
+        }
+        return self::$socketInst ;
+    }
+
+    /**
+     * 获取socket连接地址（一次性）
+     * @param type $userId    用户信息
+     * @return type
+     * @throws Exception
+     */
+    public static function getWssUrl( $userId )
+    {
+        $socketInst = self::getSocketInst();
+        $codeInfo = $socketInst->code( '', $userId);
+        if($codeInfo['code']!=0){
+            throw new Exception('socket启动失败:'.$codeInfo['message']);
+        }
+        $code = $codeInfo['data']['code'];
+        //socket连接url
+        $connectUrl = str_replace( "=CODE", '='.$code,  config('xiesemi.socket.connectUrl') );
+        return str_replace( "=APPID",'='.config('xiesemi.socket.appid'),  $connectUrl);
+    }    
+    
     /*
      * 获取socket连接code
      */
-    public function code( $type, $userInfo )
+    public function code( $type, $userId )
     {
         //获取远端连接code
         $remote = $this->remoteCode();
         if($remote['code'] == 0){
             //将以前的同user_id数据设置为下线
-            self::setOff($userInfo['id']);
+            self::setOff($userId);
             //记录当前信息
-            self::log( $type, $userInfo ,$remote['data']['code'] );
+            self::log( $type, $userId ,$remote['data']['code'] );
         }
         return $remote;
     }
@@ -101,15 +140,15 @@ class SocketLogic
     /**
      * 记录本地日志
      * @param type $type
-     * @param type $userInfo
+     * @param type $userId
      * @param type $code
      * @return type
      */
-    private static function log( $type, $userInfo ,$code )
+    private static function log( $type, $userId ,$code )
     {
         $data['code']       = $code;
         $data['user_type']  = $type;
-        $data['user_id']    = $userInfo ? $userInfo['id'] : 0 ;
+        $data['user_id']    = $userId ?  : '' ;
         $data['connect_status'] = self::SOCKET_TOCONNECT;    //待接入
         return UserSocketService::save( $data );
     }

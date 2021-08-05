@@ -32,16 +32,16 @@ class AuthLogic
      */
     public static function roleMenus( $roleIds ,$admType,$con=[])
     {
-        //获取角色的权限
-        $accessIds  = UserAuthRoleAccessService::roleAccessIds( $roleIds );
-        $con[] = ['id','in',$accessIds];
-        if( UserAuthAccessService::mainModel()->hasField('only_role')){
-            $con[] = ['only_role','in',['',$admType]];
-        }
         //超管直接展示全部菜单：20210402
         if( $admType == 'super'){
-            $accesses   = UserAuthAccessService::listsInfo();
+            $accesses   = UserAuthAccessService::listsInfo( $con );
         } else {
+            //获取角色的权限
+            $accessIds  = UserAuthRoleAccessService::roleAccessIds( $roleIds );
+            $con[] = ['id','in',$accessIds];
+            if( UserAuthAccessService::mainModel()->hasField('only_role')){
+                $con[] = ['only_role','in',['',$admType]];
+            }
             $accesses   = UserAuthAccessService::listsInfo($con);
         }
 
@@ -69,11 +69,11 @@ class AuthLogic
             $con[] = ['strict','=',1];
         }
         //不用lists，避免死循环
-        $authData = UserAuthDataService::mainModel()->where( $con )->select();
+        $authData = UserAuthDataService::mainModel()->where( $con )->cache(86400)->select();
         if(!$authData){
             return [];
         }
-        
+
         $resCon = [];
         foreach($authData as $v){
             $jsonStr = str_replace('{$sessionUserId}', $userId, $v['field_con']);

@@ -130,7 +130,18 @@ class UserService implements MainModelInterface {
         }
         return $res;
     }
-    
+    /**
+     * 手机号码取用户id
+     */
+    public static function phoneUserId( $phone )
+    {
+        $con = [];
+        $con[] = ['phone', '=', $phone];
+        if(self::mainModel()->hasField('company_id')){
+            $con[] = ['company_id','=',session(SESSION_COMPANY_ID)];
+        }
+        return self::column('id',$con);
+    }
     /*
      * 手机号码取用户信息
      */

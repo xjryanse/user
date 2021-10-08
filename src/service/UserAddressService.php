@@ -3,7 +3,9 @@
 namespace xjryanse\user\service;
 
 use xjryanse\system\interfaces\MainModelInterface;
-
+use xjryanse\logic\DataCheck;
+use xjryanse\logic\Strings;
+use Exception;
 /**
  * 用户常用地址
  */
@@ -15,6 +17,32 @@ class UserAddressService implements MainModelInterface {
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAddress';
 
+    public static function userAddressCount($userId){
+        $con[] = ['user_id','=',$userId];
+        return self::mainModel()->where($con)->count();
+    }
+    
+    public static function extraPreSave( &$data, $uuid){
+        $keys = ['realname','phone','area_code','address'];
+        $notices['realname'] = '姓名必须';
+        $notices['phone'] = '手机号码必须';
+        $notices['area_code'] = '地区必须';
+        $notices['address'] = '详细地址必须';
+        
+        DataCheck::must($data, $keys, $notices);
+        if(!Strings::isPhone($data['phone'])){
+            throw new Exception('手机号码格式错误');
+        }
+        
+        return $data;
+    }
+    
+    public static function extraPreUpdate( &$data, $uuid){
+        if($data['phone'] && !Strings::isPhone($data['phone'])){
+            throw new Exception('手机号码格式错误');
+        }
+        return $data;
+    }
     /**
      *
      */

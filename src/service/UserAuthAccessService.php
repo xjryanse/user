@@ -50,7 +50,7 @@ class UserAuthAccessService implements MainModelInterface {
             if($v['access_group'] == 'admin'){
                 $v['url'] = Url::addParam($v['url'], ['comKey' => session(SESSION_COMPANY_KEY), 'sessionid' => session_id()]);
             }
-            if($v['access_group'] == 'adminx'){
+            if(in_array($v['access_group'],['adminx','manage'])){
                 $v['url'] = '/'.session(SESSION_COMPANY_KEY).$v['url'];
             }
         }

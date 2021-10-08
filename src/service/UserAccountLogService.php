@@ -6,7 +6,11 @@ use xjryanse\finance\service\FinanceAccountLogService;
 use xjryanse\finance\service\FinanceAccountService;
 use xjryanse\finance\service\FinanceStatementService;
 use xjryanse\system\interfaces\MainModelInterface;
+use xjryanse\user\service\UserAccountService;
+use xjryanse\order\service\OrderService;
+use xjryanse\order\service\OrderFlowNodeService;
 use xjryanse\logic\Arrays;
+use xjryanse\logic\DataCheck;
 use xjryanse\user\model\UserAccountLog;
 use think\Db;
 
@@ -20,6 +24,8 @@ class UserAccountLogService extends Base implements MainModelInterface {
 
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAccountLog';
+    //直接执行后续触发动作
+    protected static $directAfter = true;        
 
     /**
      * 取最后一个来源表id，一般用于校验条件
@@ -64,8 +70,52 @@ class UserAccountLogService extends Base implements MainModelInterface {
         $data['current_quota']  = $info['current'] + $value;
         $res = self::save( $data );
         return $res;
-    }    
+    }
+    /**
+     * 出账逻辑
+     * @param type $userId
+     * @param type $accountType
+     * @param type $value
+     * @param type $data
+     * @param type $permitNegative
+     * @return type
+     * @throws Exception
+     */
+    public static function doOutcome( $userId, $accountType, $value, $data= [] ,$permitNegative = false )
+    {
+        //事务校验
+        self::checkTransaction();
+        //账户校验
+        if(!UserAccountService::getByUserAccountType($userId, $accountType)){
+            self::accountCreate($userId, $accountType);
+        }
+
+        $info = UserAccountService::getByUserAccountType( $userId, $accountType );
+        if( !$permitNegative && $info['current'] - abs($value) < 0 ){
+            throw new Exception('账户余额不足');
+        }
+        //新增流水
+        $data['user_id']        = $userId;
+        $data['account_id']     = $info['id'];
+        $data['before_quota']   = $info['current'];
+        $data['change']         = -1 * abs( $value );
+        $data['current_quota']  = $info['current'] - $value;
+        $res = self::save( $data );
+        return $res;
+    }
     
+    public static function extraPreSave( &$data, $uuid){
+        $keys = ['account_id','change'];
+        DataCheck::must($data, $keys);
+        $accountId          = Arrays::value($data, 'account_id');
+        $accountInfo        = UserAccountService::getInstance($accountId)->get();
+        $data['user_id']    = $accountInfo['user_id'];
+        $data['account_type']   = $accountInfo['account_type'];
+        $data['before_quota']   = $accountInfo['current'];
+        $data['current_quota']  = $accountInfo['current'] + $data['change'];
+        
+        return $data;
+    }
     /**
      * 来源表和来源id查是否有记录：
      * 一般用于判断该笔记录是否已入账，避免重复入账
@@ -78,12 +128,18 @@ class UserAccountLogService extends Base implements MainModelInterface {
         //`from_table_id` varchar(32) DEFAULT '' COMMENT '来源表id',
         $con[] = ['from_table','=',$fromTable];
         $con[] = ['from_table_id','=',$fromTableId];
-        
-        return self::count($con) ? self::find( $con ) : false;
+        // 20210919，考虑异步触发器；无session
+        $info = self::mainModel()->where($con)->find();
+        return $info ? : false;
     }
 
     public static function extraAfterSave(&$data, $uuid) {
         self::extraAfterUpdate($data, $uuid);
+        $fromTable = Arrays::value($data, 'from_table');
+        $fromTableId = Arrays::value($data, 'from_table_id');
+        if($fromTable == OrderService::getTable()){
+            OrderFlowNodeService::lastNodeFinishAndNext($fromTableId);
+        }
     }
     
     public static function extraAfterUpdate(&$data, $uuid) {
@@ -93,10 +149,11 @@ class UserAccountLogService extends Base implements MainModelInterface {
         UserAccountService::getInstance( $accountId )->updateRemain();
         $accountType = UserAccountService::getInstance($accountId)->fAccountType();
         //是余额的，入账一下账户余额
-        if( $accountType == 'money' && $info['statement_id'] && !FinanceAccountLogService::statementHasLog( $info['statement_id'] ) ){
-            Db::startTrans();
+        $fromTable = self::mainModel()->getTable();
+        if( $accountType == 'money' &&  !FinanceAccountLogService::hasLog( $fromTable, $uuid ) ){
+        // if( $accountType == 'money' && $info['statement_id'] && !FinanceAccountLogService::statementHasLog( $info['statement_id'] ) ){
+            self::checkTransaction();
             self::addFinanceAccountLog( $info );
-            Db::commit();
         }
     }
     
@@ -111,10 +168,10 @@ class UserAccountLogService extends Base implements MainModelInterface {
         $data['company_id']     = $log['company_id'];
         $data['user_id']        = $log['user_id'];
         $data['customer_id']    = Arrays::value($statement, 'customer_id');
-        $data['money']          = Arrays::value($statement, 'need_pay_prize');
-        $data['statement_id']   = $log['statement_id'];
-        $data['reason']         = Arrays::value($statement, 'statement_name');
-        $data['change_type']    = Arrays::value($statement, 'change_type');
+        $data['money']          = Arrays::value($log, 'change');
+        $data['statement_id']   = $statementId;
+        $data['reason']         = Arrays::value($log, 'change_reason');
+        $data['change_type']    = $data['money'] >= 0 ? 2 : 1;  //正数应付；负数应收
         $data['account_id']     = FinanceAccountService::getIdByAccountType($log['company_id'], 'money');      //线上余额
         $data['from_table']     = self::mainModel()->getTable();
         $data['from_table_id']  = $log['id'];

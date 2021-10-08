@@ -14,10 +14,30 @@ class UserService implements MainModelInterface {
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
     use \xjryanse\traits\SubServiceTrait;
-
+    use \xjryanse\traits\ObjectAttrTrait;
+    
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\User';    
-    
+    // 是否缓存get数据
+    protected static $getCache = true;
+    ///从ObjectAttrTrait中来
+    // 定义对象的属性
+    protected $objAttrs = [];
+    // 定义对象是否查询过的属性
+    protected $hasObjAttrQuery = [];
+    // 定义对象属性的配置数组
+    protected static $objAttrConf = [
+        'userAccount'=>[
+            'class'     =>'\\xjryanse\\user\\service\\UserAccountService',
+            'keyField'  =>'user_id',
+            'master'    =>true
+        ],
+        'userAddress'=>[
+            'class'     =>'\\xjryanse\\user\\service\\UserAddressService',
+            'keyField'  =>'user_id',
+            'master'    =>true
+        ]
+    ];
     /**
      * 额外保存信息
      * @param type $data

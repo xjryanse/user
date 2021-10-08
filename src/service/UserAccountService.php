@@ -3,6 +3,9 @@
 namespace xjryanse\user\service;
 
 use xjryanse\system\interfaces\MainModelInterface;
+use xjryanse\logic\Arrays2d;
+use xjryanse\logic\Sql;
+use think\Db;
 
 /**
  * 用户账户
@@ -20,9 +23,18 @@ class UserAccountService implements MainModelInterface {
      */
     public function updateRemain()
     {
-        $con[] = ['account_id','=',$this->uuid];
-        $money = UserAccountLogService::mainModel()->where($con)->sum('change');
-        return self::mainModel()->where('id',$this->uuid)->update(['current'=>$money]);
+//        $con[] = ['account_id','=',$this->uuid];
+//        $money = UserAccountLogService::mainModel()->where($con)->sum('change');
+//        return self::mainModel()->where('id',$this->uuid)->update(['current'=>$money]);
+        
+        $mainTable  =   self::getTable();
+        $mainField  =   "current";
+        $dtlTable   =   UserAccountLogService::getTable();
+        $dtlStaticField     =   "change";
+        $dtlUniField        =   "account_id";
+        $dtlCon[] = ['account_id','=',$this->uuid];
+        $sql = Sql::staticUpdate($mainTable, $mainField, $dtlTable, $dtlStaticField, $dtlUniField,$dtlCon);
+        return Db::query($sql);
     }
     
     /**
@@ -51,14 +63,15 @@ class UserAccountService implements MainModelInterface {
      * 按userid取值，按key替换。
      * @param type $userId
      */
-    protected static function getByUserId( $userId )
+    public static function getByUserId( $userId )
     {
-        $values = self::listsByField( 'user_id' , $userId );
-        $values = $values ? $values->toArray() : [] ;
-        $keys   = array_column( $values,'account_type');
-        return array_combine($keys, $values);
+        $res = UserService::getInstance($userId)->objAttrsList('userAccount');
+        return Arrays2d::fieldSetKey($res, 'account_type');
+//        $values = self::listsByField( 'user_id' , $userId );
+//        $values = $values ? $values->toArray() : [] ;
+//        $keys   = array_column( $values,'account_type');
+//        return array_combine($keys, $values);
     }    
-    
     /*
      * 用户id和账户类型创建，一个类型只能有一个账户
      */
@@ -80,19 +93,35 @@ class UserAccountService implements MainModelInterface {
      * @return type
      */
     public static function getByUserAccountType($userId, $accountType) {
-        $con[] = ['user_id', '=', $userId];
+        $lists = UserService::getInstance($userId)->objAttrsList('userAccount');
         $con[] = ['account_type', '=', $accountType];
-
-        return self::find($con);
+        return Arrays2d::listFind($lists, $con);
+//        $con[] = ['user_id', '=', $userId];
+//        $con[] = ['account_type', '=', $accountType];
+//        return self::find($con);
     }
-
+    /**
+     * 获取用户的账户id，没id自动创建
+     */
+    public static function userAccountId($userId, $accountType){
+        $con[] = ['user_id','=',$userId];
+        $con[] = ['account_type','=',$accountType];
+        $id = self::mainModel()->where($con)->value('id');
+        if(!$id){
+            $data['user_id']        = $userId;
+            $data['account_type']   = $accountType;
+            $id = self::saveGetId($data);
+        }
+        return $id;
+    }
     /*     * *
      * 获取用户账户信息
      */
 
     public static function getUserAccounts($userId) {
-        $con[] = ['user_id', '=', $userId];
-        return self::lists($con);
+        return UserService::getInstance($userId)->objAttrsList('userAccount');
+//        $con[] = ['user_id', '=', $userId];
+//        return self::lists($con);
     }
 
     /**

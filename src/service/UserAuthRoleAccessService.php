@@ -28,7 +28,23 @@ class UserAuthRoleAccessService implements MainModelInterface {
 
         return self::mainModel()->where($con)->distinct('access_id')->cache(86400)->column('access_id');
     }
-
+    /**
+     * 保存角色的权限id
+     * @param type $roleId      角色id
+     * @param type $accessIds   权限id
+     */
+    public static function saveRoleAccess( $roleId, $accessIds ){
+        self::checkTransaction();
+        $con[] = ['role_id','=',$roleId];
+        //先删
+        self::mainModel()->where($con)->delete();
+        //再加
+        $tempArr = [];
+        foreach( $accessIds as &$accessId ){
+            $tempArr[] = ['role_id'=>$roleId,'access_id'=>$accessId];
+        }
+        return self::saveAll($tempArr);
+    }
     /**
      *
      */

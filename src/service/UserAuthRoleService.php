@@ -3,6 +3,7 @@
 namespace xjryanse\user\service;
 
 use xjryanse\system\interfaces\MainModelInterface;
+use xjryanse\logic\Arrays;
 use Exception;
 
 /**
@@ -15,6 +16,34 @@ class UserAuthRoleService implements MainModelInterface {
 
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthRole';
+    
+    protected static function extraDetail( &$item ,$uuid )
+    {
+        //获取权限
+        $con[] = ['role_id','=',$uuid];
+        $item->sAccessIds      = UserAuthRoleAccessService::mainModel()->where($con)->column('distinct access_id');
+        return $item;
+    }
+    /**
+     * 额外保存信息
+     * @param type $data
+     * @param type $uuid
+     */
+    public static function extraPreSave( &$data, $uuid){
+        //有传权限数据，则保存权限
+        $sAccessIds = Arrays::value($data,'sAccessIds',[]);
+        if( $sAccessIds ){
+            UserAuthRoleAccessService::saveRoleAccess($uuid, $sAccessIds);
+        }
+    }
+    
+    public static function extraPreUpdate( &$data, $uuid){
+        //有传权限数据，则保存权限
+        $sAccessIds = Arrays::value($data,'sAccessIds',[]);
+        if( $sAccessIds ){
+            UserAuthRoleAccessService::saveRoleAccess($uuid, $sAccessIds);
+        }
+    }
     /**
      * 默认的权限
      * @return type

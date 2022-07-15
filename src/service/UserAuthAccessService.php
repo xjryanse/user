@@ -3,6 +3,7 @@
 namespace xjryanse\user\service;
 
 use xjryanse\system\interfaces\MainModelInterface;
+use xjryanse\logic\Strings;
 use xjryanse\logic\Url;
 use Exception;
 
@@ -41,6 +42,11 @@ class UserAuthAccessService implements MainModelInterface {
         if($lists){
             $lists = $lists->toArray();
         }
+        //20220515增加替换参数
+        $replaceData['year'] = date('Y');
+        $replaceData['yearmonth'] = date('Y-m');
+        $replaceData['date'] = date('d');
+
         foreach ($lists as &$v) {
             //兼容vue，节点默认不展开
             $v['vue_expand'] = false;
@@ -50,9 +56,12 @@ class UserAuthAccessService implements MainModelInterface {
             if($v['access_group'] == 'admin'){
                 $v['url'] = Url::addParam($v['url'], ['comKey' => session(SESSION_COMPANY_KEY), 'sessionid' => session_id()]);
             }
-            if(in_array($v['access_group'],['adminx','manage'])){
+            // 嵌套页面添加key
+            if(in_array($v['access_group'],['adminx','manage']) && $v['show_type'] == 1){
                 $v['url'] = '/'.session(SESSION_COMPANY_KEY).$v['url'];
             }
+            // 20220515增加替换参数
+            $v['url'] = Strings::dataReplace($v['url'],$replaceData);
         }
         return $lists;
     }

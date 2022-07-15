@@ -6,7 +6,7 @@ use xjryanse\user\service\UserAuthRoleAccessService;
 use xjryanse\user\service\UserAuthUserRoleService;
 use xjryanse\user\service\UserAuthDataService;
 use xjryanse\user\service\UserAuthRoleDataService;
-
+use xjryanse\logic\Debug;
 /**
  * 登录逻辑
  */
@@ -21,6 +21,7 @@ class AuthLogic
     {
         //获取用户的角色
         $roleIds    = UserAuthUserRoleService::userRoleIds($userId);
+        Debug::debug(__CLASS__.__FUNCTION__.'$roleIds',$roleIds);
         return self::roleMenus($roleIds,$admType,$con);
     }
     
@@ -33,7 +34,7 @@ class AuthLogic
     public static function roleMenus( $roleIds ,$admType,$con=[])
     {
         //超管直接展示全部菜单：20210402
-        if( $admType == 'super'){
+        if( $admType == 'super' || $admType == 'subSuper'){
             $accesses   = UserAuthAccessService::listsInfo( $con );
         } else {
             //获取角色的权限
@@ -42,6 +43,7 @@ class AuthLogic
             if( UserAuthAccessService::mainModel()->hasField('only_role')){
                 $con[] = ['only_role','in',['',$admType]];
             }
+            Debug::debug(__CLASS__.__FUNCTION__.'$con',$con);
             $accesses   = UserAuthAccessService::listsInfo($con);
         }
 
@@ -63,6 +65,9 @@ class AuthLogic
         $roleIds    = UserAuthUserRoleService::userRoleIds($userId);
         //获取角色的数据权限
         $dataIds  = UserAuthRoleDataService::roleDataIds( $roleIds );
+        if(!$dataIds){
+            return [];
+        }
         $con[] = ['id','in',$dataIds];
         $con[] = ['table_name','in',$tableName];
         if($strict){

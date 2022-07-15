@@ -5,70 +5,34 @@ namespace xjryanse\user\service;
 use xjryanse\system\interfaces\MainModelInterface;
 
 /**
- * 用户角色
+ * 角色权限
  */
-class UserAuthUserRoleService implements MainModelInterface {
+class UserAuthRoleUniversalService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
-    use \xjryanse\traits\StaticModelTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthUserRole';
+    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthRoleUniversal';
 
     /**
-     * 保存用户的角色信息
+     * 角色的数据权限id数组
      */
-    public static function userRoleIdSave($userId,$roleIds){
-        self::checkTransaction();
-        if(!$userId){
-            return false;
-        }
-        $dataArr = [];
-        foreach($roleIds as $roleId){
-            $dataArr[] = ['user_id'=>$userId,'role_id'=>$roleId];
-        }
-        //先删再加
-        self::mainModel()->where('user_id',$userId)->delete();
-        self::saveAll($dataArr);
-    }
-    /**
-     * 用户的角色id数组
-     */
-    public static function userRoleIds($userId) {
-        $con[] = ['user_id', 'in', $userId];
+    public static function roleUniversalIds($roleIds,$tableName) {
+        $con[] = ['role_id', 'in', $roleIds];
+        $con[] = ['universal_table', '=', $tableName];
         //只查有效
         $con[] = ['status', '=', 1];
-        if (self::mainModel()->hasField('app_id')) {
-            $con[] = ['app_id', '=', session(SESSION_APP_ID)];
-        }
-        $lists  = self::staticConList($con);
-        return array_column($lists,'role_id');
+        return self::mainModel()->where($con)->distinct('universal_id')->cache(86400)->column('universal_id');
     }
     /**
-     * 查看用户是否有某个权限
+     * 根据当前会话用户，获取id
+     * @param type $tableName
      */
-    public static function userHasRole( $userId, $roleId )
-    {
-        $con[] = ['user_id','in',$userId];
-        $con[] = ['role_id','in',$roleId];
-        return self::staticConCount($con);
-    }
-    /**
-     * 查询用户是否有某个角色key的权限
-     */
-    public static function userHasRoleKey($userId, $roleKey){
-        $ids = UserAuthRoleService::keysToIds($roleKey);
-        return self::userHasRole($userId, $ids);
-    }
-    /**
-     * 20220512
-     * 清除用户的角色：用于离职删除权限
-     * TODO清缓存？？
-     */
-    public static function clearRole($userId){
-        $con[] = ['user_id','=',$userId];
-        return self::mainModel()->where($con)->delete();
+    public static function userUniversalIds($tableName){
+        $roleIds = UserAuthUserRoleService::userRoleIds(session(SESSION_USER_ID));
+        $universalRoleIds = self::roleUniversalIds($roleIds, $tableName);
+        return $universalRoleIds;
     }
 
     /**
@@ -93,16 +57,16 @@ class UserAuthUserRoleService implements MainModelInterface {
     }
 
     /**
-     *
+     * 角色id
      */
-    public function fUserId() {
+    public function fRoleId() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     *
+     * 数据权限项id
      */
-    public function fRoleId() {
+    public function fDataId() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 

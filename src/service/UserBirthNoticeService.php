@@ -5,50 +5,30 @@ namespace xjryanse\user\service;
 use xjryanse\system\interfaces\MainModelInterface;
 
 /**
- * 用户实名
+ * 用户生日提醒
  */
-class UserIdnoService implements MainModelInterface {
+class UserBirthNoticeService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
-    use \xjryanse\traits\SubServiceTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserIdno';
-    //分表字段
-    protected static $subFields = ['phone','realname','id_no','address','birthday','sex','nation','pic_face','pic_back','real_face'];
-    //直接执行后续触发动作
-    protected static $directAfter = true;        
+    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserBirthNotice';
 
-    /**
-     * 额外输入信息
-     */
-    public static function extraAfterSave( &$data, $uuid ){
-        $info = self::getInstance($uuid)->get(0);
-        if($info['realname']){
-            UserService::mainModel()->where('id',$uuid)->update(['realname'=>$info['realname']]);
-        }
-    }
-    /**
-     * 额外输入信息
-     */
-    public static function extraAfterUpdate( &$data, $uuid ){
-        return self::extraAfterSave( $data, $uuid );
-    }
-
-    public static function save( $data)
-    {
-        if(!isset( $data['id']) && isset($data['user_id']) && $data['user_id']){
-            $data['id'] = $data['user_id'];
-        }
-        return self::commSave( $data );
+    public static function hasLog($userId,$year = ''){
+        $yearQ = $year ? : date('Y'); 
+        $con[] = ['user_id','=',$userId];
+        $con[] = ['year','=',$yearQ];
+        return self::count($con);
     }
     
-    public static function getByUserId($userId) {
-        $con[] = ['user_id', '=', $userId];
-        return self::find($con);
+    public static function log($userId,$openid,$year = ''){
+        $data['user_id']    = $userId;
+        $data['openid']     = $openid;
+        $data['year']       = $year ? : date('Y');
+        return self::save($data);
     }
-
+    
     /**
      *
      */
@@ -71,58 +51,37 @@ class UserIdnoService implements MainModelInterface {
     }
 
     /**
-     * 用户id
-     */
-    public function fUserId() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 手机号码
+     * 手机
      */
     public function fPhone() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     * 真实姓名
+     * 消息
      */
-    public function fRealname() {
+    public function fMsg() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     * 身份证号码
+     * 发送渠道
      */
-    public function fIdNo() {
+    public function fChannel() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     * 身份证地址
+     * 请求参数
      */
-    public function fAddress() {
+    public function fRequest() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     * 生日
+     * 返回结果
      */
-    public function fBirthday() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 性别：1男2女
-     */
-    public function fSex() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 民族
-     */
-    public function fNation() {
+    public function fResponse() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
@@ -130,27 +89,6 @@ class UserIdnoService implements MainModelInterface {
      * 排序
      */
     public function fSort() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 身份证正面
-     */
-    public function fPicFace() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 身份证反面
-     */
-    public function fPicBack() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 人脸照片
-     */
-    public function fRealFace() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 

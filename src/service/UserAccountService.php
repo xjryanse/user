@@ -17,6 +17,8 @@ class UserAccountService implements MainModelInterface {
 
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAccount';
+    //直接执行后续触发动作
+    protected static $directAfter = true;  
 
     /**
      * 更新余额
@@ -32,7 +34,7 @@ class UserAccountService implements MainModelInterface {
         $dtlTable   =   UserAccountLogService::getTable();
         $dtlStaticField     =   "change";
         $dtlUniField        =   "account_id";
-        $dtlCon[] = ['account_id','=',$this->uuid];
+        $dtlCon[] = ['main.id','=',$this->uuid];
         $sql = Sql::staticUpdate($mainTable, $mainField, $dtlTable, $dtlStaticField, $dtlUniField,$dtlCon);
         return Db::query($sql);
     }
@@ -72,6 +74,10 @@ class UserAccountService implements MainModelInterface {
 //        $keys   = array_column( $values,'account_type');
 //        return array_combine($keys, $values);
     }    
+    
+    public static function extraAfterSave(&$data, $uuid) {
+        UserService::getInstance($data['user_id'])->objAttrsPush('userAccount',$data);
+    }
     /*
      * 用户id和账户类型创建，一个类型只能有一个账户
      */
@@ -79,11 +85,14 @@ class UserAccountService implements MainModelInterface {
     {
         $con[] = ['user_id','=',$userId];
         $con[] = ['account_type','=',$accountType];
-        
-        $data = [];
-        $data['user_id']        = $userId;
-        $data['account_type']   = $accountType;
-        return self::count($con) ? false : self::save( $data );
+        if(self::count($con)){
+            return false;
+        } else {
+            $data = [];
+            $data['user_id']        = $userId;
+            $data['account_type']   = $accountType;
+            return self::save($data);
+        }
     }
     
     /**

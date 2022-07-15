@@ -42,16 +42,29 @@ class LoginLogic
         }
         //记录登录日志
         UserLoginLogService::loginLog( $userInfo );
-        
         //登录信息存session
-        session(SESSION_USER_ID,$userInfo['id']);
-        session('scopeUserInfo',$userInfo);
+        UserService::getInstance($userInfo['id'])->sessionSet();
         $userInfo['sessionId'] = session_id();
         //是微信浏览器环境，同时更新用户的默认登录
 //        if(WxBrowser::isWxBrowser() && session('myOpenid')){
 //            WechatUserBindService::updateUserIdByOpenid( session('myOpenid') , $userInfo['id']);
 //        }
         unset($userInfo['password']);
+        return $userInfo;
+    }
+    /**
+     * 纯用户名登录，跳过密码校验
+     * @param type $username
+     */
+    public static function userNameLogin($username){
+        $con[] = ['username','=', $username ];
+        $con[] = ['company_id','in',session(SESSION_COMPANY_ID)];
+
+        $userInfo = UserService::mainModel()->where( $con )->find();
+        if($userInfo){
+            //登录信息存session
+            UserService::getInstance($userInfo['id'])->sessionSet();
+        }
         return $userInfo;
     }
     /**
@@ -75,20 +88,9 @@ class LoginLogic
      */
     public static function userSession()
     {
-        $data['userInfo']   = session('scopeUserInfo');
+        $data['userInfo']   = session(SESSION_USER_INFO);
         $data['userId']     = session(SESSION_USER_ID);
         $data['sessionId']  = session_id();
         return $data;
-    }
-    /**
-     * 直接设定了当前用户的信息
-     */
-    public static function sessionUserSet( $userId )
-    {
-        //从数据库直接拿
-        $userInfo = UserService::getInstance( $userId )->get( 0 );
-        session( 'scopeUserInfo', $userInfo );
-        session( SESSION_USER_ID, $userInfo['id'] );
-        return $userInfo;
     }
 }

@@ -4,9 +4,11 @@ namespace xjryanse\user\logic;
 use xjryanse\user\service\UserAuthAccessService;
 use xjryanse\user\service\UserAuthRoleAccessService;
 use xjryanse\user\service\UserAuthUserRoleService;
+use xjryanse\user\service\UserAuthRoleService;
 use xjryanse\user\service\UserAuthDataService;
 use xjryanse\user\service\UserAuthRoleDataService;
 use xjryanse\logic\Debug;
+use xjryanse\view\service\ViewStaffService;
 /**
  * 登录逻辑
  */
@@ -19,9 +21,8 @@ class AuthLogic
      */
     public static function getMenu( $userId,$admType='',$con = [] )
     {
-        //获取用户的角色
         $roleIds    = UserAuthUserRoleService::userRoleIds($userId);
-        Debug::debug(__CLASS__.__FUNCTION__.'$roleIds',$roleIds);
+        // Debug::debug('$roleIds',$roleIds);
         return self::roleMenus($roleIds,$admType,$con);
     }
     
@@ -46,7 +47,7 @@ class AuthLogic
             Debug::debug(__CLASS__.__FUNCTION__.'$con',$con);
             $accesses   = UserAuthAccessService::listsInfo($con);
         }
-
+        // Debug::debug(__METHOD__.'$accesses',$accesses);
         return (new self())->makeTree($accesses);
     }
     /**

@@ -2,8 +2,10 @@
 
 namespace xjryanse\user\service;
 
+use xjryanse\staff\service\StaffLogService;
 use xjryanse\system\interfaces\MainModelInterface;
-
+use xjryanse\view\service\ViewStaffService;
+use xjryanse\user\service\UserService;
 /**
  * 用户角色
  */
@@ -31,6 +33,14 @@ class UserAuthUserRoleService implements MainModelInterface {
         //先删再加
         self::mainModel()->where('user_id',$userId)->delete();
         self::saveAll($dataArr);
+        //20220811:如果权限中有员工权限，则在员工表中添加入职记录
+        if(UserAuthRoleService::hasStaffRoles($roleIds)){
+            StaffLogService::setJoin($userId);
+        }
+        // 清除本表缓存
+        self::staticCacheClear();
+        // 20230108
+        UserService::clearCommExtraDetailsCache($userId);
     }
     /**
      * 用户的角色id数组
@@ -43,7 +53,16 @@ class UserAuthUserRoleService implements MainModelInterface {
             $con[] = ['app_id', '=', session(SESSION_APP_ID)];
         }
         $lists  = self::staticConList($con);
-        return array_column($lists,'role_id');
+        $roleIds = array_column($lists,'role_id');
+        //20220817：兼容客户？？？
+        if(!ViewStaffService::isStaff($userId) && !$roleIds){
+            //TODO:客户定制权限处理
+            //如果用户不是员工，取客户通用权限            
+            $keys = ['customer'];
+            $roleIds = UserAuthRoleService::keysToIds($keys);
+        }
+        
+        return $roleIds;
     }
     /**
      * 查看用户是否有某个权限
@@ -68,9 +87,28 @@ class UserAuthUserRoleService implements MainModelInterface {
      */
     public static function clearRole($userId){
         $con[] = ['user_id','=',$userId];
-        return self::mainModel()->where($con)->delete();
+        $res = self::mainModel()->where($con)->delete();
+        // 清除本表缓存
+        self::staticCacheClear();
+        // 20230108
+        UserService::clearCommExtraDetailsCache($userId);
+        return $res;
     }
-
+    /**
+     * 用户的所属角色：用于数据权限控制
+     */
+    public static function userRoleKeyForDataAuth($userId){
+        // 权限组1：后台管理员
+        if(self::userHasRoleKey($userId, 'logistics')){
+            return 'logistics';
+        }
+        // 权限组2：驾驶员
+        if(self::userHasRoleKey($userId, 'driver')){
+            return 'driver';
+        }
+        // 客户
+        return 'customer';
+    }
     /**
      *
      */

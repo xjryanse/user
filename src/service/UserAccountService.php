@@ -3,6 +3,7 @@
 namespace xjryanse\user\service;
 
 use xjryanse\system\interfaces\MainModelInterface;
+use xjryanse\logic\Arrays;
 use xjryanse\logic\Arrays2d;
 use xjryanse\logic\Sql;
 use think\Db;
@@ -14,12 +15,23 @@ class UserAccountService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
-
+    use \xjryanse\traits\UniAttrTrait;
+    
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAccount';
     //直接执行后续触发动作
     protected static $directAfter = true;  
 
+    /**
+     * 20230528:联动属性（注入模式，在$objAttrConf的基础上进行优化）
+     * @var type 
+     */
+    protected static $uniAttrConf = [
+        'userAccount'=>[
+            'keyField'  =>'user_id',
+            'baseClass' =>'xjryanse\\user\\service\\UserService'
+        ]
+    ];    
     /**
      * 更新余额
      */
@@ -77,6 +89,26 @@ class UserAccountService implements MainModelInterface {
     
     public static function extraAfterSave(&$data, $uuid) {
         UserService::getInstance($data['user_id'])->objAttrsPush('userAccount',$data);
+        //2023-01-08：
+        UserService::clearCommExtraDetailsCache($data['user_id']);
+    }
+    //2023-01-08：
+    public static function extraPreUpdate(&$data, $uuid) {
+        $info = self::getInstance($uuid)->get();
+        if($info['user_id']){
+            UserService::clearCommExtraDetailsCache($info['user_id']);
+        }
+    }
+    //2023-01-08：
+    public static function extraAfterUpdate(&$data, $uuid) {
+        if($data['user_id']){
+            UserService::clearCommExtraDetailsCache($data['user_id']);
+        }
+    }
+    
+    public function extraAfterDelete($data){
+    //2023-01-08：
+        UserService::clearCommExtraDetailsCache($data['user_id']);
     }
     /*
      * 用户id和账户类型创建，一个类型只能有一个账户
@@ -131,6 +163,22 @@ class UserAccountService implements MainModelInterface {
         return UserService::getInstance($userId)->objAttrsList('userAccount');
 //        $con[] = ['user_id', '=', $userId];
 //        return self::lists($con);
+    }
+    /**
+     * 2022-11-24
+     * @param type $ids
+     * @return type
+     */
+    public static function extraDetails( $ids ){
+        return self::commExtraDetails($ids, function($lists) use ($ids){
+            //流水数
+            $accountLogArr = UserAccountLogService::groupBatchCount('account_id', $ids);
+            foreach($lists as &$v){
+                //流水数
+                $v['logCount']        = Arrays::value($accountLogArr, $v['id'],0);
+            }
+            return $lists;
+        });
     }
 
     /**

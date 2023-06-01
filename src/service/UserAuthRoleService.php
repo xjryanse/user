@@ -20,6 +20,8 @@ class UserAuthRoleService implements MainModelInterface {
 
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthRole';
+    //直接执行后续触发动作
+    protected static $directAfter = true; 
     
 //    protected static function extraDetail( &$item ,$uuid )
 //    {
@@ -39,6 +41,7 @@ class UserAuthRoleService implements MainModelInterface {
         $lists = $listRaw ? $listRaw->toArray() : [];
         $userCountArr = UserAuthUserRoleService::groupBatchCount('role_id', $ids);
         $accessCountArr = UserAuthRoleAccessService::groupBatchCount('role_id', $ids);
+        $universalCountArr = UserAuthRoleUniversalService::groupBatchCount('role_id', $ids);
         //权限id数组
         $accessIdObjs   = UserAuthRoleAccessService::mainModel()->where([['role_id','in',$ids]])->select();
         $accessIdArrs = $accessIdObjs ? $accessIdObjs->toArray() : [];
@@ -48,6 +51,8 @@ class UserAuthRoleService implements MainModelInterface {
             $v['userCount']     = Arrays::value($userCountArr, $v['id'],0);
             //权限数
             $v['accessCount']   = Arrays::value($accessCountArr, $v['id'],0);
+            // 页面权限数
+            $v['universalCount']   = Arrays::value($universalCountArr, $v['id'],0);
             //权限id
             $con    = [];
             $con[]  = ['role_id','=',$v['id']];
@@ -94,12 +99,12 @@ class UserAuthRoleService implements MainModelInterface {
     }
 
     public function extraPreDelete(){
-        $con[]      = ['role_id','=',$this->uuid];
-        $userRole   = UserAuthUserRoleService::find( $con );
-        if( $userRole ){
-            $userName = UserService::getInstance( $userRole['user_id'] )->fUsername();
-            throw new Exception($userName.'已使用该角色，不可操作');
-        }
+
+    }
+    
+    public function extraAfterDelete() {
+        UserAuthRoleUniversalService::roleClear($this->uuid);
+        UserAuthRoleMethodService::roleClear($this->uuid);
     }
     
     /**
@@ -110,6 +115,17 @@ class UserAuthRoleService implements MainModelInterface {
         $con[]      = ['role_id','=',$this->uuid];
         $roleCount  = UserAuthUserRoleService::mainModel()->where( $con )->count();
         return $roleCount ? true : false;
+    }
+    /**
+     * 20220811：所选的角色id，是否有员工角色（用于判断是否员工）
+     * @param type $ids
+     */
+    public static function hasStaffRoles($ids){
+        //驾驶员-driver；后勤-logistics
+        $con[] = ['role_key','in',['driver','logistics']];
+        $con[] = ['id','in',$ids];
+        $count = self::mainModel()->where($con)->count();
+        return $count ? true : false;
     }
     /**
      * 角色key，转角色id

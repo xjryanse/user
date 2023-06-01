@@ -7,51 +7,54 @@ use xjryanse\system\interfaces\MainModelInterface;
 /**
  * 角色权限
  */
-class UserAuthRoleUniversalService implements MainModelInterface {
+class UserAuthRoleMethodService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
     use \xjryanse\traits\StaticModelTrait;
-    
+
     protected static $mainModel;
-    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthRoleUniversal';
+    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthRoleMethod';
 
     /**
-     * 角色的数据权限id数组
-     */
-    public static function roleUniversalIds($roleIds,$tableName) {
-        $con[] = ['role_id', 'in', $roleIds];
-        $con[] = ['universal_table', '=', $tableName];
-        //只查有效
-        $con[] = ['status', '=', 1];
-        //dump($con);
-        return self::mainModel()->where($con)->distinct('universal_id')->cache(86400)->column('universal_id');
-    }
-    /**
-     * 根据当前会话用户，获取id
-     * @param type $tableName
-     */
-    public static function userUniversalIds($tableName){
-        $roleIds = UserAuthUserRoleService::userRoleIds(session(SESSION_USER_ID));
-        $universalRoleIds = self::roleUniversalIds($roleIds, $tableName);
-        return $universalRoleIds;
-    }
-    /**
-     * 20220819:页面项反查权限
-     * @param type $universalTable
-     * @param type $universalId
+     * 20221215根据角色id，提取有权限的方法id
+     * @param type $roleIds
      * @return type
      */
-    public static function universalRoleIds($universalTable,$universalId) {        
-        $con[] = ['universal_table','=',$universalTable];
-        $con[] = ['universal_id','=',$universalId];
-        $con[] = ['company_id','=',session(SESSION_COMPANY_ID)];
-        $lists  = self::staticConList($con);
-        $roleIds = array_column($lists,'role_id');
-        
-        return $roleIds;
+    public static function roleMethodIds($roleIds) {
+        $con[] = ['role_id', 'in', $roleIds];
+        //只查有效
+        $con[] = ['status', '=', 1];
+        return self::staticConColumn('method_id',$con);
     }
     
+    /**
+     * 2022-12-16
+     * @param type $universalTable
+     * @param type $universalId
+     * @param type $roleIds
+     * @return boolean
+     */
+    public static function methodRoleIdSave($methodId, $roleIds){
+        self::checkTransaction();
+        if(!$methodId ){
+            return false;
+        }
+        $dataArr = [];
+        foreach($roleIds as $roleId){
+            $dataArr[] = ['method_id'=>$methodId,'role_id'=>$roleId];
+        }
+        //先删再加
+        $con[] = ['method_id','=',$methodId];
+        $con[] = ['company_id','=',session(SESSION_COMPANY_ID)];
+        self::mainModel()->where($con)->delete();
+        //批量添加
+        self::saveAll($dataArr);        
+    }
+    /**
+     * 删角色同步清
+     * @param type $roleId
+     */
     public static function roleClear($roleId){
         if($roleId){
             $con[] = ['role_id','=',$roleId];
@@ -62,37 +65,11 @@ class UserAuthRoleUniversalService implements MainModelInterface {
      * 删方法同步清
      * @param type $methodId
      */
-    public static function universalClear($universalTable,$universalId){
-        if($universalTable || $universalId){
-            $con[] = ['universal_table','=',$universalTable];
-            $con[] = ['universal_id','=',$universalId];
+    public static function methodClear($methodId){
+        if($methodId){
+            $con[] = ['method_id','=',$methodId];
             self::where($con)->delete();
         }
-    }
-    /**
-     * 
-     * @param type $userId
-     * @param type $roleIds
-     * @return boolean
-     */
-    public static function universalRoleIdSave($universalTable,$universalId,$roleIds){
-        self::checkTransaction();
-        if(!$universalTable || !$universalId){
-            return false;
-        }
-        $dataArr = [];
-        foreach($roleIds as $roleId){
-            $dataArr[] = ['universal_table'=>$universalTable,'universal_id'=>$universalId,'role_id'=>$roleId];
-        }
-        //先删再加
-        $con[] = ['universal_table','=',$universalTable];
-        $con[] = ['universal_id','=',$universalId];
-        $con[] = ['company_id','=',session(SESSION_COMPANY_ID)];
-        self::mainModel()->where($con)->delete();
-        //批量添加
-        self::saveAll($dataArr);        
-        // 清除本表缓存
-        self::staticCacheClear();
     }
     /**
      *

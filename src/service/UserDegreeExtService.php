@@ -29,7 +29,7 @@ class UserDegreeExtService implements MainModelInterface {
         if(!$userInfo){
             throw new Exception('用户不存在');
         }
-        if($userInfo['degree'] == $degree){
+        if($userInfo['degree'] == $degree && $userInfo['degree_end_time'] > date('Y-m-d H:i:s') ){
             $data['pre_ext_end_time'] = $userInfo['degree_end_time'];
         } else {
             $data['pre_ext_end_time'] = date('Y-m-d H:i:s');

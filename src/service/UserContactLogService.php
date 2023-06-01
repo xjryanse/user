@@ -3,58 +3,20 @@
 namespace xjryanse\user\service;
 
 use xjryanse\system\interfaces\MainModelInterface;
-use xjryanse\logic\DataCheck;
-use xjryanse\user\service\UserService;
-use xjryanse\logic\Arrays;
-use Exception;
+
 /**
- * 用户乘客
+ * 用户沟通记录
  */
-class UserPassengerService implements MainModelInterface {
+class UserContactLogService extends Base implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserPassenger';
+    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserContactLog';
+    //直接执行后续触发动作
+    protected static $directAfter = true;        
 
-    public static function extraPreSave( &$data, $uuid){
-        if(mb_strlen(Arrays::value($data, 'id_no')) > 18){
-            throw new Exception('身份证号码太长');
-        }
-        
-        $keys = ['user_id','phone','realname'];
-        DataCheck::must($data, $keys);
-        UserService::getInstance($data['user_id'])->checkUserPhone();
-        //乘客校验
-        self::passengerCheck($data['user_id'], $data['id_no'], $uuid);
-        return $data;
-    }
-
-    public static function extraPreUpdate( &$data, $uuid){
-
-    }
-    /**
-     * 乘客校验
-     * @param type $userId
-     * @param type $idno
-     * @param type $uuid
-     * @return boolean
-     */
-    public static function passengerCheck($userId, $idno,$uuid = ''){
-        if($idno){
-            $con[] = ['user_id','=',$userId];
-            $con[] = ['id_no','=',$idno];
-            if($uuid){
-                $con[] = ['id','<>',$uuid];
-            }
-            $count = self::mainModel()->where($con)->count();
-            if($count){
-                throw new Exception('乘客信息已存在');
-            }
-        }
-    }
-    
     /**
      *
      */
@@ -77,16 +39,79 @@ class UserPassengerService implements MainModelInterface {
     }
 
     /**
-     *
+     * 用户id
      */
-    public function fSessionId() {
+    public function fUserId() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     *
+     * 账户id
      */
-    public function fUserInfo() {
+    public function fAccountId() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 变动前余额
+     */
+    public function fBeforeQuota() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 余额变动值
+     */
+    public function fChange() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 变动后余额
+     */
+    public function fCurrentQuota() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 变动分类
+     */
+    public function fChangeCate() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 变动原因
+     */
+    public function fChangeReason() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 来源表
+     */
+    public function fFromTable() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 来源表id
+     */
+    public function fFromTableId() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 结算状态：0未结算、1已结算
+     */
+    public function fBalanceStatus() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 排序
+     */
+    public function fSort() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
@@ -119,21 +144,21 @@ class UserPassengerService implements MainModelInterface {
     }
 
     /**
-     * 公众号运营者对粉丝的备注，公众号运营者可在微信公众平台用户管理界面对粉丝添加备注
+     * 备注
      */
     public function fRemark() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     * 创建者
+     * 创建者，user表
      */
     public function fCreater() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     * 更新者
+     * 更新者，user表
      */
     public function fUpdater() {
         return $this->getFFieldValue(__FUNCTION__);

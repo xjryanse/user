@@ -6,7 +6,7 @@ namespace xjryanse\user\model;
  * 用户总表
  */
 class User extends Base {
-    public static $picFields = ['headimg'];
+    public static $picFields = ['headimg','sign'];
 
     /**
      * 用户头像图标

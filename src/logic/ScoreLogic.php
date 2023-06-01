@@ -20,9 +20,12 @@ class ScoreLogic
      * @param type $userId
      */
     public static function score( $userId ){
+        /*
         $con[] = ['rule_type','=','score'];
         $con[] = ['status','=',1];
         $ruleIds = SystemRuleService::ids( $con );
+         */
+        $ruleIds = SystemRuleService::ruleTypeIds('score');
         Debug::debug("ScoreLogic::score的规则id",$ruleIds);
         foreach( $ruleIds as $ruleId){
             //校验规则，并添加积分
@@ -102,8 +105,9 @@ class ScoreLogic
         $scoreAccount       = UserAccountService::getByUserAccountType($userId, 'score');
         $rule               = SystemRuleService::getInstance( $ruleId )->get();
         Debug::debug('ruleGetData规则信息', $rule);
-        
-        $lastFromTableId    = UserAccountLogService::lastFromTableId($scoreAccount['id'],$rule['rule_key'] ,'');
+        // 20230519：优化
+        $scoreAccountId = Arrays::value($scoreAccount, 'id');
+        $lastFromTableId    = UserAccountLogService::lastFromTableId($scoreAccountId,$rule['rule_key'] ,'');
         //签到得积分
         $data               = Datetime::periodTime($rule['period'], $rule['period_unit']);
         $data['lastFromTableId']    = $lastFromTableId;

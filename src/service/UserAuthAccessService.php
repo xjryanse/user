@@ -3,6 +3,7 @@
 namespace xjryanse\user\service;
 
 use xjryanse\system\interfaces\MainModelInterface;
+use xjryanse\logic\Arrays;
 use xjryanse\logic\Strings;
 use xjryanse\logic\Url;
 use Exception;
@@ -14,10 +15,22 @@ class UserAuthAccessService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
+    use \xjryanse\traits\StaticModelTrait;
 
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthAccess';
 
+    public static function extraDetails( $ids ){
+        return self::commExtraDetails($ids, function($lists) use ($ids){
+            $roleCounts = UserAuthRoleAccessService::groupBatchCount('access_id', $ids);
+            foreach($lists as &$v){
+                $v['roleCount']       = Arrays::value($roleCounts, $v['id'],0);
+            }
+
+            return $lists;
+        });
+    }
+    
     public static function saveCheck(array $data) {
         if (!arrayHasValue($data, 'name')) {
             throw new Exception('权限名称不能为空');
@@ -38,10 +51,15 @@ class UserAuthAccessService implements MainModelInterface {
         //只取启用的
         $con[] = ['status', '=', 1];
         // index 兼容elementui
+        /*
         $lists = self::mainModel()->where($con)->field('id,pid,name,icon,access_group,access_type,show_type,url')->order($order)->cache(86400)->select();
         if($lists){
             $lists = $lists->toArray();
         }
+         */
+        // 20220814优化
+        $keys = ['id','pid','name','icon','access_group','access_type','show_type','url'];
+        $lists = self::staticConList($con, session(SESSION_COMPANY_ID), $order, $keys);
         //20220515增加替换参数
         $replaceData['year'] = date('Y');
         $replaceData['yearmonth'] = date('Y-m');

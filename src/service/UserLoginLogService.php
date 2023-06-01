@@ -12,6 +12,7 @@ class UserLoginLogService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
+    use \xjryanse\traits\RedisModelTrait;
 
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserLoginLog';
@@ -20,18 +21,21 @@ class UserLoginLogService implements MainModelInterface {
      * 记录登录日志
      */
     public static function loginLog($userInfo) {
-        $data['uid'] = $userInfo['id'];
+        $data['user_id'] = $userInfo['id'];
         $data['username'] = $userInfo['username'];
         $data['login_ip'] = Request::ip();
         $data['login_time'] = date('Y-m-d H:i:s');
         $data['domain_name'] = Request::server('HTTP_HOST');
         //登录日志
-        self::save($data);
+        //self::save($data);
+        // 20221026
+        self::redisLog($data);
         //末次登录时间更新
         $data2['id'] = $userInfo['id'];
         $data2['last_loginip'] = Request::ip();
         $data2['last_logintime'] = date('Y-m-d H:i:s');
-        UserService::getInstance($userInfo['id'])->update($data2);
+        UserService::mainModel()->where('id',$userInfo['id'])->update($data2);
+        // UserService::getInstance($userInfo['id'])->update($data2);
     }
 
     /**

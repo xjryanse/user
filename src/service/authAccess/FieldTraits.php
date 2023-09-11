@@ -1,34 +1,11 @@
 <?php
 
-namespace xjryanse\user\service;
-
-use xjryanse\system\interfaces\MainModelInterface;
+namespace xjryanse\user\service\authAccess;
 
 /**
- * 角色权限
+ * 分页复用列表
  */
-class UserAuthRoleDataService implements MainModelInterface {
-
-    use \xjryanse\traits\InstTrait;
-    use \xjryanse\traits\MainModelTrait;
-    use \xjryanse\traits\MainModelQueryTrait;
-
-    protected static $mainModel;
-    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthRoleData';
-
-    /**
-     * 角色的数据权限id数组
-     */
-    public static function roleDataIds($roleIds) {
-        $con[] = ['role_id', 'in', $roleIds];
-        //只查有效
-        $con[] = ['status', '=', 1];
-        if (self::mainModel()->hasField('app_id')) {
-            $con[] = ['app_id', '=', session(SESSION_APP_ID)];
-        }
-        return self::mainModel()->where($con)->distinct('data_id')->cache(86400)->column('data_id');
-    }
-
+trait FieldTraits{
     /**
      *
      */
@@ -51,16 +28,55 @@ class UserAuthRoleDataService implements MainModelInterface {
     }
 
     /**
-     * 角色id
+     * 父id，-1表示开发模式下的菜单
      */
-    public function fRoleId() {
+    public function fPid() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     * 数据权限项id
+     * 权限名称
      */
-    public function fDataId() {
+    public function fName() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 图标
+     */
+    public function fIcon() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 类型：
+      page非菜单页面，
+      menu侧边菜单页，
+      api api接口、
+      home首页菜单
+     */
+    public function fAccessType() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 权限地址
+     */
+    public function fUrl() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 权限串，优先于url判断
+     */
+    public function fAuthstr() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 1嵌套页，2跳链
+     */
+    public function fShowType() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 

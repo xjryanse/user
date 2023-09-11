@@ -6,6 +6,7 @@ use xjryanse\customer\service\CustomerService;
 use xjryanse\system\interfaces\MainModelInterface;
 use xjryanse\logic\Arrays;
 use xjryanse\logic\DataCheck;
+
 /**
  * 用户来访登记
  */
@@ -13,56 +14,61 @@ class UserVisitLogService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
+    use \xjryanse\traits\MainModelQueryTrait;
     use \xjryanse\traits\SubServiceTrait;
 
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserVisitLog';
+
     /**
      * 用户在多少分钟内是否有登记记录（避免重复登记）
      * @param type $customerId
      * @param type $userId
      * @param type $minutes
      */
-    public static function hasVisitWithin($customerId,$userId,$minutes = 15) {
-        $cond   = [];
-        $cond[] = ['user_id','=',$userId];
-        $cond[] = ['customer_id','=',$customerId];
-        $cond[] = ['create_time','>=',date('Y-m-d H:i:s','-'.$minutes.' minute')];
+    public static function hasVisitWithin($customerId, $userId, $minutes = 15) {
+        $cond = [];
+        $cond[] = ['user_id', '=', $userId];
+        $cond[] = ['customer_id', '=', $customerId];
+        $cond[] = ['create_time', '>=', date('Y-m-d H:i:s', '-' . $minutes . ' minute')];
         return UserVisitLogService::find($cond);
     }
-    
+
     /**
      * 额外输入信息
      */
-    public static function extraPreSave( &$data, $uuid ){
-        DataCheck::must($data, ['user_id','customer_id']);
+    public static function extraPreSave(&$data, $uuid) {
+        DataCheck::must($data, ['user_id', 'customer_id']);
         //用户信息
-        $userId     = Arrays::value($data, 'user_id');
-        $userInfo   = UserService::getInstance( $userId )->get();
+        $userId = Arrays::value($data, 'user_id');
+        $userInfo = UserService::getInstance($userId)->get();
         $data['realname'] = Arrays::value($userInfo, 'realname');
         $data['user_customer_id'] = Arrays::value($userInfo, 'customer_id');
-        $userCustomerInfo   = CustomerService::getInstance( Arrays::value($userInfo, 'customer_id') )->get();
+        $userCustomerInfo = CustomerService::getInstance(Arrays::value($userInfo, 'customer_id'))->get();
         //公司信息
-        $customerId     = Arrays::value($data, 'customer_id');
-        $customerInfo   = CustomerService::getInstance( $customerId )->get();
+        $customerId = Arrays::value($data, 'customer_id');
+        $customerInfo = CustomerService::getInstance($customerId)->get();
         $describe = '';
-        if($userCustomerInfo){
-            $describe = $userCustomerInfo['customer_name'].' 的 ';
+        if ($userCustomerInfo) {
+            $describe = $userCustomerInfo['customer_name'] . ' 的 ';
         }
-        $describe .= $data['realname'].' 于'.date('Y-m-d H:i:s'). '到访' . $customerInfo['customer_name'];
+        $describe .= $data['realname'] . ' 于' . date('Y-m-d H:i:s') . '到访' . $customerInfo['customer_name'];
         $data['describe'] = $describe;
         return $data;
     }
-    /**
-     * 额外输入信息
-     */
-    public static function extraAfterSave( &$data, $uuid ){
-    }
-    /**
-     * 额外输入信息
-     */
-    public static function extraAfterUpdate( &$data, $uuid ){
 
+    /**
+     * 额外输入信息
+     */
+    public static function extraAfterSave(&$data, $uuid) {
+        
+    }
+
+    /**
+     * 额外输入信息
+     */
+    public static function extraAfterUpdate(&$data, $uuid) {
+        
     }
 
     /**

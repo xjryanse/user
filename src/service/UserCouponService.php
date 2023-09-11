@@ -5,6 +5,7 @@ namespace xjryanse\user\service;
 use xjryanse\system\interfaces\MainModelInterface;
 use xjryanse\order\service\OrderService;
 use Exception;
+
 /**
  * 用户优惠券
  */
@@ -12,69 +13,70 @@ class UserCouponService extends Base implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
+    use \xjryanse\traits\MainModelQueryTrait;
 
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserCoupon';
-    
+
     /**
      * 添加优惠券
      * @param type $userId
      * @param type $counponTplId
      */
-    public static function couponAdd( $userId, $counponTplId, $data =[] )
-    {
+    public static function couponAdd($userId, $counponTplId, $data = []) {
         $couponTplInfo = UserCouponTemplateService::getInstance($counponTplId)->get();
-        $data['user_id']        = $userId;
-        $data['coupon_tpl_id']  = $counponTplId;
-        $data['coupon_title']   = Arrays::value( $couponTplInfo, 'coupon_title');
-        $data['start_time']     = date('Y-m-d H:i:s');
-        $data['exprire_time']   = date('Y-m-d H:i:s',time() + 86400 * intval($couponTplInfo['expire_days']));
+        $data['user_id'] = $userId;
+        $data['coupon_tpl_id'] = $counponTplId;
+        $data['coupon_title'] = Arrays::value($couponTplInfo, 'coupon_title');
+        $data['start_time'] = date('Y-m-d H:i:s');
+        $data['exprire_time'] = date('Y-m-d H:i:s', time() + 86400 * intval($couponTplInfo['expire_days']));
 
         return self::save($data);
     }
+
     /**
      * 是否有券
      */
-    public static function hasCoupon( $fromTable, $fromTableId, $con = [])
-    {
-        $con[] = ['from_table','=',$fromTable];
-        $con[] = ['from_table_id','=',$fromTableId];
-        return self::mainModel()->where( $con )->count();
+    public static function hasCoupon($fromTable, $fromTableId, $con = []) {
+        $con[] = ['from_table', '=', $fromTable];
+        $con[] = ['from_table_id', '=', $fromTableId];
+        return self::mainModel()->where($con)->count();
     }
+
     /**
      * 优惠券使用
      */
-    public function use( $useTable,$useTableId)
-    {
-        $con[] = ['use_table','=',$useTable];
-        $con[] = ['use_table_id','=',$useTableId];
-        if(self::count($con)){
+    public function use($useTable, $useTableId) {
+        $con[] = ['use_table', '=', $useTable];
+        $con[] = ['use_table_id', '=', $useTableId];
+        if (self::count($con)) {
             throw new Exception('该使用事项已有用券记录');
         }
-        
+
         $info = $this->get(0);
-        if($info['use_status']){
+        if ($info['use_status']) {
             $rData[1] = '已使用';
             $rData[2] = '已过期';
-            throw new Exception( '优惠券'. $rData[$info['use_status']] );
+            throw new Exception('优惠券' . $rData[$info['use_status']]);
         }
-        if( date('Y-m-d H:i:s') >= $info['exprire_time']){
-            self::mainModel()->where('id',$this->uuid)->update(['use_status'=>2]);
-            throw new Exception( '优惠券过期了');
+        if (date('Y-m-d H:i:s') >= $info['exprire_time']) {
+            self::mainModel()->where('id', $this->uuid)->update(['use_status' => 2]);
+            throw new Exception('优惠券过期了');
         }
 
-        $data['use_table']      = $useTable;
-        $data['use_table_id']   = $useTableId;
-        $data['use_time']       = date('Y-m-d H:i:s');
-        $data['use_status']     =   1;
-        $cond[] = ['id','=',$this->uuid];
-        $cond[] = ['use_status','=',0];
+        $data['use_table'] = $useTable;
+        $data['use_table_id'] = $useTableId;
+        $data['use_time'] = date('Y-m-d H:i:s');
+        $data['use_status'] = 1;
+        $cond[] = ['id', '=', $this->uuid];
+        $cond[] = ['use_status', '=', 0];
         $res = self::mainModel()->where($cond)->update($data);
-        if(!$res){
+        if (!$res) {
             throw new Exception('该券已使用');
         }
         return $res;
     }
+
     /**
      * 钩子-保存前
      */

@@ -14,10 +14,18 @@ class UserPassengerService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
-
+    use \xjryanse\traits\MainModelQueryTrait;
+    use \xjryanse\traits\ObjectAttrTrait;
+    
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserPassenger';
 
+    public static function extraDetails( $ids ){
+        return self::commExtraDetails($ids, function($lists) use ($ids){
+            return $lists;
+        },true);
+    }
+    
     public static function extraPreSave( &$data, $uuid){
         if(mb_strlen(Arrays::value($data, 'id_no')) > 18){
             throw new Exception('身份证号码太长');

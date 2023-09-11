@@ -11,39 +11,40 @@ class UserIdnoService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
+    use \xjryanse\traits\MainModelQueryTrait;
     use \xjryanse\traits\SubServiceTrait;
 
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserIdno';
     //分表字段
-    protected static $subFields = ['phone','realname','id_no','address','birthday','sex','nation','pic_face','pic_back','real_face'];
+    protected static $subFields = ['phone', 'realname', 'id_no', 'address', 'birthday', 'sex', 'nation', 'pic_face', 'pic_back', 'real_face'];
     //直接执行后续触发动作
-    protected static $directAfter = true;        
+    protected static $directAfter = true;
 
     /**
      * 额外输入信息
      */
-    public static function extraAfterSave( &$data, $uuid ){
+    public static function extraAfterSave(&$data, $uuid) {
         $info = self::getInstance($uuid)->get(0);
-        if($info['realname']){
-            UserService::mainModel()->where('id',$uuid)->update(['realname'=>$info['realname']]);
+        if ($info['realname']) {
+            UserService::mainModel()->where('id', $uuid)->update(['realname' => $info['realname']]);
         }
     }
+
     /**
      * 额外输入信息
      */
-    public static function extraAfterUpdate( &$data, $uuid ){
-        return self::extraAfterSave( $data, $uuid );
+    public static function extraAfterUpdate(&$data, $uuid) {
+        return self::extraAfterSave($data, $uuid);
     }
 
-    public static function save( $data)
-    {
-        if(!isset( $data['id']) && isset($data['user_id']) && $data['user_id']){
+    public static function save($data) {
+        if (!isset($data['id']) && isset($data['user_id']) && $data['user_id']) {
             $data['id'] = $data['user_id'];
         }
-        return self::commSave( $data );
+        return self::commSave($data);
     }
-    
+
     public static function getByUserId($userId) {
         $con[] = ['user_id', '=', $userId];
         return self::find($con);

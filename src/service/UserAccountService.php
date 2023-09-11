@@ -15,118 +15,108 @@ class UserAccountService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
-    use \xjryanse\traits\UniAttrTrait;
-    
+    use \xjryanse\traits\MainModelQueryTrait;
+
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAccount';
     //直接执行后续触发动作
-    protected static $directAfter = true;  
+    protected static $directAfter = true;
 
-    /**
-     * 20230528:联动属性（注入模式，在$objAttrConf的基础上进行优化）
-     * @var type 
-     */
-    protected static $uniAttrConf = [
-        'userAccount'=>[
-            'keyField'  =>'user_id',
-            'baseClass' =>'xjryanse\\user\\service\\UserService'
-        ]
-    ];    
     /**
      * 更新余额
      */
-    public function updateRemain()
-    {
+    public function updateRemain() {
 //        $con[] = ['account_id','=',$this->uuid];
 //        $money = UserAccountLogService::mainModel()->where($con)->sum('change');
 //        return self::mainModel()->where('id',$this->uuid)->update(['current'=>$money]);
-        
-        $mainTable  =   self::getTable();
-        $mainField  =   "current";
-        $dtlTable   =   UserAccountLogService::getTable();
-        $dtlStaticField     =   "change";
-        $dtlUniField        =   "account_id";
-        $dtlCon[] = ['main.id','=',$this->uuid];
-        $sql = Sql::staticUpdate($mainTable, $mainField, $dtlTable, $dtlStaticField, $dtlUniField,$dtlCon);
+
+        $mainTable = self::getTable();
+        $mainField = "current";
+        $dtlTable = UserAccountLogService::getTable();
+        $dtlStaticField = "change";
+        $dtlUniField = "account_id";
+        $dtlCon[] = ['main.id', '=', $this->uuid];
+        $sql = Sql::staticUpdate($mainTable, $mainField, $dtlTable, $dtlStaticField, $dtlUniField, $dtlCon);
         return Db::query($sql);
     }
-    
+
     /**
      * 创建账户
      * @param type $userId  用户id
      * @param type $keys    键
      */
-    public static function accountCreate( $userId ,$keys = [] )
-    {
+    public static function accountCreate($userId, $keys = []) {
         //获取现有账户
         $accounts = self::getByUserId($userId);
         //兼容字符串
-        if(!is_array( $keys )){
-            $keys = [ $keys ];
+        if (!is_array($keys)) {
+            $keys = [$keys];
         }
         //循环判断，未创建则创建
-        foreach($keys as $key){
-            if(!isset($accounts[$key])){
+        foreach ($keys as $key) {
+            if (!isset($accounts[$key])) {
                 //创建用户账户
                 self::createUserAccount($userId, $key);
             }
         }
-    }    
-    
+    }
+
     /**
      * 按userid取值，按key替换。
      * @param type $userId
      */
-    public static function getByUserId( $userId )
-    {
+    public static function getByUserId($userId) {
         $res = UserService::getInstance($userId)->objAttrsList('userAccount');
         return Arrays2d::fieldSetKey($res, 'account_type');
 //        $values = self::listsByField( 'user_id' , $userId );
 //        $values = $values ? $values->toArray() : [] ;
 //        $keys   = array_column( $values,'account_type');
 //        return array_combine($keys, $values);
-    }    
-    
+    }
+
     public static function extraAfterSave(&$data, $uuid) {
-        UserService::getInstance($data['user_id'])->objAttrsPush('userAccount',$data);
+        UserService::getInstance($data['user_id'])->objAttrsPush('userAccount', $data);
         //2023-01-08：
         UserService::clearCommExtraDetailsCache($data['user_id']);
     }
+
     //2023-01-08：
     public static function extraPreUpdate(&$data, $uuid) {
         $info = self::getInstance($uuid)->get();
-        if($info['user_id']){
+        if ($info['user_id']) {
             UserService::clearCommExtraDetailsCache($info['user_id']);
         }
     }
+
     //2023-01-08：
     public static function extraAfterUpdate(&$data, $uuid) {
-        if($data['user_id']){
+        if ($data['user_id']) {
             UserService::clearCommExtraDetailsCache($data['user_id']);
         }
     }
-    
-    public function extraAfterDelete($data){
-    //2023-01-08：
+
+    public function extraAfterDelete($data) {
+        //2023-01-08：
         UserService::clearCommExtraDetailsCache($data['user_id']);
     }
+
     /*
      * 用户id和账户类型创建，一个类型只能有一个账户
      */
-    public static function createUserAccount( $userId, $accountType )
-    {
-        $con[] = ['user_id','=',$userId];
-        $con[] = ['account_type','=',$accountType];
-        if(self::count($con)){
+
+    public static function createUserAccount($userId, $accountType) {
+        $con[] = ['user_id', '=', $userId];
+        $con[] = ['account_type', '=', $accountType];
+        if (self::count($con)) {
             return false;
         } else {
             $data = [];
-            $data['user_id']        = $userId;
-            $data['account_type']   = $accountType;
+            $data['user_id'] = $userId;
+            $data['account_type'] = $accountType;
             return self::save($data);
         }
     }
-    
+
     /**
      * 根据用户和账户类型取单条数据
      * @param type $userId
@@ -141,20 +131,22 @@ class UserAccountService implements MainModelInterface {
 //        $con[] = ['account_type', '=', $accountType];
 //        return self::find($con);
     }
+
     /**
      * 获取用户的账户id，没id自动创建
      */
-    public static function userAccountId($userId, $accountType){
-        $con[] = ['user_id','=',$userId];
-        $con[] = ['account_type','=',$accountType];
+    public static function userAccountId($userId, $accountType) {
+        $con[] = ['user_id', '=', $userId];
+        $con[] = ['account_type', '=', $accountType];
         $id = self::mainModel()->where($con)->value('id');
-        if(!$id){
-            $data['user_id']        = $userId;
-            $data['account_type']   = $accountType;
+        if (!$id) {
+            $data['user_id'] = $userId;
+            $data['account_type'] = $accountType;
             $id = self::saveGetId($data);
         }
         return $id;
     }
+
     /*     * *
      * 获取用户账户信息
      */
@@ -164,21 +156,22 @@ class UserAccountService implements MainModelInterface {
 //        $con[] = ['user_id', '=', $userId];
 //        return self::lists($con);
     }
+
     /**
      * 2022-11-24
      * @param type $ids
      * @return type
      */
-    public static function extraDetails( $ids ){
-        return self::commExtraDetails($ids, function($lists) use ($ids){
-            //流水数
-            $accountLogArr = UserAccountLogService::groupBatchCount('account_id', $ids);
-            foreach($lists as &$v){
-                //流水数
-                $v['logCount']        = Arrays::value($accountLogArr, $v['id'],0);
-            }
-            return $lists;
-        });
+    public static function extraDetails($ids) {
+        return self::commExtraDetails($ids, function($lists) use ($ids) {
+                    //流水数
+                    $accountLogArr = UserAccountLogService::groupBatchCount('account_id', $ids);
+                    foreach ($lists as &$v) {
+                        //流水数
+                        $v['logCount'] = Arrays::value($accountLogArr, $v['id'], 0);
+                    }
+                    return $lists;
+                });
     }
 
     /**

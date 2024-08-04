@@ -4,11 +4,12 @@ namespace xjryanse\user\logic;
 use xjryanse\user\service\UserAuthAccessService;
 use xjryanse\user\service\UserAuthRoleAccessService;
 use xjryanse\user\service\UserAuthUserRoleService;
-use xjryanse\user\service\UserAuthRoleService;
+// use xjryanse\user\service\UserAuthRoleService;
 use xjryanse\user\service\UserAuthDataService;
 use xjryanse\user\service\UserAuthRoleDataService;
 use xjryanse\logic\Debug;
-use xjryanse\view\service\ViewStaffService;
+// view视图逐步淘汰
+// use xjryanse\view\service\ViewStaffService;
 /**
  * 登录逻辑
  */
@@ -21,8 +22,8 @@ class AuthLogic
      */
     public static function getMenu( $userId,$admType='',$con = [] )
     {
-        $roleIds    = UserAuthUserRoleService::userRoleIds($userId);
-        // Debug::debug('$roleIds',$roleIds);
+        $roleIds    = UserAuthUserRoleService::userRoleIdsWithJob($userId);
+        // dump($roleIds);
         return self::roleMenus($roleIds,$admType,$con);
     }
     
@@ -42,12 +43,13 @@ class AuthLogic
             $accessIds  = UserAuthRoleAccessService::roleAccessIds( $roleIds );
             $con[] = ['id','in',$accessIds];
             if( UserAuthAccessService::mainModel()->hasField('only_role')){
+                // 20231018：发现好像没啥用？？
                 $con[] = ['only_role','in',['',$admType]];
             }
             Debug::debug(__CLASS__.__FUNCTION__.'$con',$con);
             $accesses   = UserAuthAccessService::listsInfo($con);
         }
-        // Debug::debug(__METHOD__.'$accesses',$accesses);
+        Debug::debug(__METHOD__.'$accesses',$accesses);
         return (new self())->makeTree($accesses);
     }
     /**

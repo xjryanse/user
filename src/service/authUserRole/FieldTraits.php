@@ -1,25 +1,11 @@
 <?php
 
-namespace xjryanse\user\service;
-
-use xjryanse\system\interfaces\MainModelInterface;
+namespace xjryanse\user\service\authUserRole;
 
 /**
- * 签到奖励表
+ * 
  */
-class UserSignAwardService implements MainModelInterface {
-
-    use \xjryanse\traits\InstTrait;
-    use \xjryanse\traits\MainModelTrait;
-    use \xjryanse\traits\MainModelRamTrait;
-    use \xjryanse\traits\MainModelCacheTrait;
-    use \xjryanse\traits\MainModelCheckTrait;
-    use \xjryanse\traits\MainModelGroupTrait;
-    use \xjryanse\traits\MainModelQueryTrait;
-
-
-    protected static $mainModel;
-    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserSignAward';
+trait FieldTraits{
 
     /**
      *
@@ -43,51 +29,16 @@ class UserSignAwardService implements MainModelInterface {
     }
 
     /**
-     * 用户id
+     *
      */
     public function fUserId() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     * 签到id
+     *
      */
-    public function fSignLogId() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 奖励名称
-     */
-    public function fAwardName() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 奖励类型
-     */
-    public function fAwardType() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 奖励值
-     */
-    public function fAwardValue() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 奖励记录表
-     */
-    public function fAwardTable() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 奖励记录表id
-     */
-    public function fAwardTableId() {
+    public function fRoleId() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
@@ -160,5 +111,5 @@ class UserSignAwardService implements MainModelInterface {
     public function fUpdateTime() {
         return $this->getFFieldValue(__FUNCTION__);
     }
-
+            
 }

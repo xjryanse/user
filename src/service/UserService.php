@@ -8,10 +8,12 @@ use xjryanse\wechat\service\WechatWePubFansService;
 use xjryanse\wechat\service\WechatWePubFansUserService;
 use xjryanse\wechat\service\WechatWeAppFansUserService;
 use xjryanse\system\interfaces\MainModelInterface;
-use xjryanse\view\service\ViewStaffService;
+// use xjryanse\view\service\ViewStaffService;
+use xjryanse\user\service\UserAuthUserRoleService;
 use xjryanse\system\service\SystemFileService;
 use xjryanse\universal\service\UniversalPageService;
 use xjryanse\logic\Arrays;
+use xjryanse\logic\Arrays2d;
 use xjryanse\logic\Strings;
 use xjryanse\logic\DataCheck;
 use xjryanse\logic\Debug;
@@ -25,13 +27,17 @@ use Exception;
  * 【1】后台添加
  * 【2】公众号注册，默认写
  * 【3】小程序注册，默认写
- * 
  */
 class UserService extends Base implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
+    use \xjryanse\traits\MainModelRamTrait;
+    use \xjryanse\traits\MainModelCacheTrait;
+    use \xjryanse\traits\MainModelCheckTrait;
+    use \xjryanse\traits\MainModelGroupTrait;
     use \xjryanse\traits\MainModelQueryTrait;
+
     use \xjryanse\traits\SubServiceTrait;
     use \xjryanse\traits\ObjectAttrTrait;
 
@@ -69,6 +75,11 @@ class UserService extends Base implements MainModelInterface {
     // 20230710：开启方法调用统计
     protected static $callStatics = true;
 
+    use \xjryanse\user\service\index\DoTraits;
+    use \xjryanse\user\service\index\FieldTraits;
+    use \xjryanse\user\service\index\ListTraits;
+    use \xjryanse\user\service\index\TriggerTraits;
+    
     //2023-01-08：
     public static function extraAfterUpdate(&$data, $uuid) {
         // 20230710：统计方法执行次数改造
@@ -84,18 +95,20 @@ class UserService extends Base implements MainModelInterface {
         
         UserService::clearCommExtraDetailsCache($uuid);
         // 20230415：修复bug
-        ViewStaffService::staticCacheClear();
+        // ViewStaffService::staticCacheClear();
     }
 
     public function extraAfterDelete($data) {
         //2023-01-08：
         UserService::clearCommExtraDetailsCache($this->uuid);
         // 20230415:修复bug
-        ViewStaffService::staticCacheClear();
+        // ViewStaffService::staticCacheClear();
     }
 
     /**
      * 20220613:获取当天生日的用户列表
+     * @param type $date
+     * @return type
      */
     public static function getBrithdayUsers($date = '') {
         $dateQuery = $date ? date('m-d', strtotime($date)) : date('m-d');
@@ -109,6 +122,7 @@ class UserService extends Base implements MainModelInterface {
 
     /**
      * 会话设置
+     * @useFul 1
      */
     public function sessionSet() {
         if (!$this->uuid) {
@@ -116,10 +130,16 @@ class UserService extends Base implements MainModelInterface {
         }
         //用户id
         session(SESSION_USER_ID, $this->uuid);
-        $userInfo = $this->info();
+        // $userInfo = $this->info();
+        /// 20231026：尝试仅使用get??
+        $userInfo = $this->get();
+        // 20231026
+        $userInfo['roleIds'] = UserAuthUserRoleService::userRoleIds($this->uuid);
         //是否公司员工；是否管理员；是否有司机角色；后勤角色
         // $isCompanyUser      = SystemCompanyUserService::isCompanyUser(session(SESSION_COMPANY_ID), $this->uuid);
-        $isStaff = ViewStaffService::isStaff($this->uuid);
+        // $isStaff = ViewStaffService::isStaff($this->uuid);
+        // 20231028替换
+        $isStaff = UserAuthUserRoleService::isStaff($this->uuid);
         // 注意：可能导致权限泄露！！
         $isAdminTypeMatch = in_array($userInfo['admin_type'], ['super']);
         // $userHasRole        = UserAuthUserRoleService::userHasRoleKey($this->uuid, ['driver','logistics']);
@@ -134,36 +154,19 @@ class UserService extends Base implements MainModelInterface {
         $userInfo['weAppOpenid'] = WechatWeAppFansUserService::mainModel()->where($con)->column('openid');
         //20220531,密码不存
         $userInfo['password'] = '';
+        // throw new Exception('测试');
+        // dump($userInfo);exit;
         //用户信息
         session(SESSION_USER_INFO, $userInfo);
         //用户所属的部门id
         session(SESSION_DEPT_ID, $userInfo['dept_id']);
         //20220820：增加客户id
         session(SESSION_CUSTOMER_ID, $userInfo['customer_id']);
-        /*
-          Debug::debug(SESSION_USER_INFO, session(SESSION_USER_INFO));
-          Debug::debug(SESSION_CUSTOMER_ID, session(SESSION_CUSTOMER_ID));
-          Debug::debug(SESSION_DEPT_ID, session(SESSION_DEPT_ID));
-          Debug::debug(SESSION_USER_ID, session(SESSION_USER_ID));
-         */
-        //部门id信息
-        /*
-          $con[] = ['user_id','=',$this->uuid];
-          $companyUserInfo = SystemCompanyUserService::mainModel()->where($con)->order('dept_id desc')->find();
-          Debug::debug('$companyUserInfo条件',$con);
-          Debug::debug('$companyUserInfo',$companyUserInfo);
-          session(SESSION_DEPT_ID,$companyUserInfo ? $companyUserInfo['dept_id'] : '');
-         */
+        // 20240101
+        // dump('sessionSet');dump($userInfo);
+        return $userInfo;
     }
 
-    /*
-     * 20220914：尝试去除？？
-      public function info($cache=5){
-      $info               = $this->get();
-      $info['roleIds']    = UserAuthUserRoleService::userRoleIds($this->uuid);
-      return $info;
-      }
-     */
 
     /**
      * 20220511
@@ -181,6 +184,7 @@ class UserService extends Base implements MainModelInterface {
 
     /**
      * 验证用户是否有绑定了手机号码
+     * @useFul 1
      */
     public function checkUserPhone($notice = '') {
         $info = self::mainModel()->where('id', $this->uuid)->find();
@@ -281,24 +285,10 @@ class UserService extends Base implements MainModelInterface {
         return $data;
     }
 
-    /**
-     * 分页（软删）
-     * @param type $con
-     * @param type $order
-     * @param type $perPage
-     * @param type $having
-     * @return type
-     */
-//    public static function paginate($con = [], $order = '', $perPage = 10, $having = '', $field = "*") {
-//        $con[] = ['is_delete', '=', 0];
-//        // return self::commPaginate($con, $order, $perPage, $having,$field);
-//        return self::paginateX($con, $order, $perPage, $having, $field);
-//    }
-
     /*
      * 获取签名图片路径
+     * @useFul 1
      */
-
     public function getSignPath() {
         $sign = self::mainModel()->where('id', $this->uuid)->value('sign');
         $path = SystemFileService::getInstance($sign)->fFilePath();
@@ -321,6 +311,7 @@ class UserService extends Base implements MainModelInterface {
 
     /**
      * 20220715:简单的用户信息保存：姓名收件
+     * @useFul 1
      */
     public static function simpleSave($realname, $phone, $data = []) {
         $con[] = ['phone', '=', $phone];
@@ -343,19 +334,11 @@ class UserService extends Base implements MainModelInterface {
     }
 
     public static function extraDetails($ids) {
-        return self::commExtraDetailsWithCache($ids, function($lists) use ($ids) {
+        return self::commExtraDetails($ids, function($lists) use ($ids) {
                     //推荐人查询数组
                     $recArr = self::groupBatchCount('rec_user_id', $ids);
                     //业务员查询数组
                     $busiArr = self::groupBatchCount('busier_id', $ids);
-                    //乘客查询数组
-                    // $passArr = UserPassengerService::groupBatchCount('user_id', $ids);
-                    //绑定公司数组
-                    $custArr = CustomerUserService::groupBatchCount('user_id', $ids);
-                    //绑定公众号账号数
-                    $wePubArr = WechatWePubFansUserService::groupBatchCount('user_id', $ids);
-                    //绑定小程序账号数
-                    $weAppArr = WechatWeAppFansUserService::groupBatchCount('user_id', $ids);
                     //角色数
                     //$roleArr = UserAuthUserRoleService::groupBatchCount('user_id', $ids);
                     $roleArr = UserAuthUserRoleService::groupBatchSelect('user_id', $ids, 'user_id,role_id');
@@ -364,39 +347,26 @@ class UserService extends Base implements MainModelInterface {
 
                     foreach ($lists as &$user) {
                         // 2022-11-24:账户数
-                        $user['accountCount'] = Arrays::value($userAccountArr, $user['id'], 0);
+                        $user['accountCount']   = Arrays::value($userAccountArr, $user['id'], 0);
                         // 20220924:该用户是否有手机号码
-                        $user['hasPhone'] = Strings::isPhone($user['phone']) ? 1 : 0;
+                        $user['hasPhone']       = Strings::isPhone($user['phone']) ? 1 : 0;
                         //推荐人数
-                        $user['recCounts'] = Arrays::value($recArr, $user['id'], 0);
+                        $user['recCounts']      = Arrays::value($recArr, $user['id'], 0);
                         //业务人数
-                        $user['busiCounts'] = Arrays::value($busiArr, $user['id'], 0);
-                        //乘客人数
-                        // $user['passCounts']     = Arrays::value($passArr, $user['id'],0);
-                        //绑定客户
-                        $user['custCounts'] = Arrays::value($custArr, $user['id'], 0);
-                        //绑定公众账号数
-                        $user['wePubCounts'] = Arrays::value($wePubArr, $user['id'], 0);
-                        //绑定小程序账号数
-                        $user['weAppCounts'] = Arrays::value($weAppArr, $user['id'], 0);
-                        //绑定包车订单数
-                        //$user['orderBaoCounts'] = Arrays::value($baoArr, $user['id'],0);
-                        //绑定拼车订单数
-                        //$user['orderPinCounts'] = Arrays::value($pinArr, $user['id'],0);
-                        //出车趟数
-                        //$user['baoBusDriverCounts'] = Arrays::value($baoBusDriverArr, $user['id'],0);
+                        $user['busiCounts']     = Arrays::value($busiArr, $user['id'], 0);
                         //角色数
-                        $user['roleIds'] = array_column(Arrays::value($roleArr, $user['id'], []), 'role_id') ?: [];
-                        $user['roleCount'] = count(Arrays::value($roleArr, $user['id'], []));
+                        $user['roleIds']        = array_column(Arrays::value($roleArr, $user['id'], []), 'role_id') ?: [];
+                        $user['roleCount']      = count(Arrays::value($roleArr, $user['id'], []));
                         //keys
-                        $keys = ['recCounts', 'busiCounts', 'passCounts', 'custCounts', 'wePubCounts', 'weAppCounts', 'orderBaoCounts', 'orderPinCounts', 'roleCount', 'baoBusDriverCounts'];
-                        $user['hasData'] = array_sum(Arrays::getByKeys($user, $keys)) ? 1 : 0;
+                        $keys                   = ['recCounts', 'busiCounts', 'passCounts', 'custCounts', 'wePubCounts', 'weAppCounts', 'orderBaoCounts', 'orderPinCounts', 'roleCount', 'baoBusDriverCounts'];
+                        $user['hasData']        = array_sum(Arrays::getByKeys($user, $keys)) ? 1 : 0;
                         // 20220914:是否有签名：用于前端显示
-                        $user['hasSign'] = $user['sign'] ? 1 : 0;
+                        $user['hasSign']        = $user['sign'] ? 1 : 0;
+                        // 20240416 是否员工
+                        $user['isStaff']        = Arrays::value($user, 'uniSystemCompanyUserCount') ? 1: 0;
                     }
-
                     return $lists;
-                }, 3600);
+                },true);
     }
 
     /**
@@ -409,23 +379,7 @@ class UserService extends Base implements MainModelInterface {
         $hasValRule['custCounts'] = '该用户有绑定客户，需要先解绑';
         DataCheck::hasValue($info, $hasValRule);
 
-
-//        $rules['recCounts'][1] = '已审批通过，不可删';
-//        $rules['audit_status'][2] = '审批已完成，不可删';
-//        DataCheck::valueMatch($info, $rules);
     }
-
-    /**
-     * 额外保存身份信息
-     * @param array $data
-     * @return type
-     */
-//    public static function save($data) {
-//        $res = self::commSave($data);
-//        $res['user_id'] = $res['id'];
-//        UserIdnoService::saveGetId($data);
-//        return $res;
-//    }
     
     /**
      * 20230710：因统计函数调用次数改造
@@ -441,39 +395,14 @@ class UserService extends Base implements MainModelInterface {
     }
 
     /**
-     * 额外保存身份信息
-     * @param array $data
-     * @return type
-     */
-//    public function update(array $data) {
-//        $res = $this->commUpdate($data);
-//        //有则更新，无则新增
-//        if (UserIdnoService::getInstance($this->uuid)->get()) {
-//            UserIdnoService::getInstance($this->uuid)->update($data);
-//        } else {
-//            $data['id'] = $this->uuid;
-//            $data['user_id'] = $this->uuid;
-//
-//            UserIdnoService::save($data);
-//        }
-//        return $res;
-//    }
-//    
-        
-    /**
      * 手机号码取用户id；没用户不写入
+     * @useFul 1
      */
     public static function phoneUserId($phone) {
         $con = [];
         $con[] = ['phone', '=', $phone];
         // 2023-02-27: 手机号码提取用户id
-        return self::where($con)->value('id');
-        /*
-          if(self::mainModel()->hasField('company_id')){
-          $con[] = ['company_id','=',session(SESSION_COMPANY_ID)];
-          }
-          return self::column('id',$con);
-         */
+        return self::where($con)->cache(1)->value('id');
     }
 
     /*
@@ -525,6 +454,7 @@ class UserService extends Base implements MainModelInterface {
      * 【1】如果手机号码已有用户，返回已有用户id；
      * 【2】如果手机号码没有用户，且oldUserId有手机号码；重新建一个用户；
      * 【3】如果手机号码没有用户，且oldUserId无手机号码，更新oldUserId手机号码
+     * @useFul 1
      */
     public static function phoneBindUserGetId($phone, $oldUserId) {
         if (!session(SESSION_COMPANY_ID)) {
@@ -622,218 +552,55 @@ class UserService extends Base implements MainModelInterface {
         $info = WechatWePubFansUserService::changeBind($pubOpenId, $userId);
         return $info;
     }
-
     /**
-     *
+     * 判断是否当前用户
+     * @param type $userId
      */
-    public function fId() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     *
-     */
-    public function fAppId() {
-        return $this->getFFieldValue(__FUNCTION__);
+    public static function isMe($userId){
+        return session(SESSION_USER_ID) && $userId == session(SESSION_USER_ID) ? 1 : 0;
     }
 
     /**
-     * 推荐用户id
+     * 20231118:端口初始化时带公司初始化
      */
-    public function fRecUserId() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
+    public static function compUserInit($companyId, $phone){
+        $data['company_id'] = $companyId;
+        $data['username']   = $phone;
+        $data['phone']      = $phone;
+        // 默认密码为手机号码后6位
+        $data['password']   = password_hash(substr($phone, -6), PASSWORD_DEFAULT);
+        $data['admin_type'] = 'subSuper';
 
+        $res = self::saveRam($data);
+        return $res;
+    }
     /**
-     *
+     * 员工姓名转id，仅支持当前员工
      */
-    public function fCompanyId() {
-        return $this->getFFieldValue(__FUNCTION__);
+    public static function staffRealnameToId($realname){
+        // 全部员工id
+        $staffUserIds = UserAuthUserRoleService::staffUserIds();
+        return self::realnameToId($realname, $staffUserIds);
     }
-
     /**
-     * 用户名
+     * 姓名转id
+     * @param type $realname 姓名
+     * @param type $ids      有效的id数组
+     * @return type
+     * @throws Exception
      */
-    public function fUsername() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 会员等级：normal普通会员；senior：高级会员
-     */
-    public function fDegree() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 用户头像【存id】
-     */
-    public function fHeadimg() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 密码
-     */
-    public function fPassword() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 手机
-     */
-    public function fPhone() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 平台昵称
-     */
-    public function fNickname() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 真实姓名
-     */
-    public function fRealname() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    public function fNamePhone() {
-        return $this->fieldValue('namePhone');
-    }
-
-    /**
-     * 性别(1男,2女)
-     */
-    public function fSex() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 生日
-     */
-    public function fBirthday() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    public function fBusierId() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 身份证号
-     */
-    public function fIdNo() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 注册来源
-     */
-    public function fSource() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 后台类型:
-      '':无后台权限
-      'normal':普通后台用户
-      'super':系统超级管理员
-      'subsuper'公司级超级管理
-
-     */
-    public function fAdminType() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 末次登录ip
-     */
-    public function fLastLoginip() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 末次登录时间
-     */
-    public function fLastLogintime() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     *
-     */
-    public function fSort() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 状态(0禁用,1启用)
-     */
-    public function fStatus() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 有使用(0否,1是)
-     */
-    public function fHasUsed() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 锁定（0：未锁，1：已锁）
-     */
-    public function fIsLock() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 锁定（0：未删，1：已删）
-     */
-    public function fIsDelete() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 备注
-     */
-    public function fRemark() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    public function fSign() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 创建者
-     */
-    public function fCreater() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 更新者
-     */
-    public function fUpdater() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 创建时间
-     */
-    public function fCreateTime() {
-        return $this->getFFieldValue(__FUNCTION__);
-    }
-
-    /**
-     * 更新时间
-     */
-    public function fUpdateTime() {
-        return $this->getFFieldValue(__FUNCTION__);
+    public static function realnameToId($realname, $ids){
+        $con[]  = ['id','in',$ids];
+        $con[]  = ['status','=',1];
+        $lists  = self::where($con)->field('id,realname')->cache(1)->select();
+        $arr    = $lists ? $lists->toArray() : [];
+        
+        $conName[] = ['realname','=',$realname];
+        $res = Arrays2d::listFilter($arr, $conName);
+        if(count($res) > 1){
+            throw new Exception($realname.'有多个,无法匹配');
+        }
+        return $res ? $res[0]['id']: '';
     }
 
 }

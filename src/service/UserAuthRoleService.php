@@ -7,6 +7,7 @@ use xjryanse\logic\Arrays;
 use xjryanse\logic\Arrays2d;
 use xjryanse\user\service\UserAuthUserRoleService;
 use xjryanse\user\service\UserAuthRoleAccessService;
+use xjryanse\system\service\SystemAuthJobRoleService;
 use Exception;
 
 /**
@@ -16,14 +17,22 @@ class UserAuthRoleService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
+    use \xjryanse\traits\MainModelRamTrait;
+    use \xjryanse\traits\MainModelCacheTrait;
+    use \xjryanse\traits\MainModelCheckTrait;
+    use \xjryanse\traits\MainModelGroupTrait;
     use \xjryanse\traits\MainModelQueryTrait;
+
     use \xjryanse\traits\StaticModelTrait;
+    use \xjryanse\traits\ObjectAttrTrait;
+    use \xjryanse\traits\MainModelComCateLevelQueryTrait;
 
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthRole';
     //直接执行后续触发动作
     protected static $directAfter = true;
 
+    use \xjryanse\user\service\authRole\TriggerTraits;
 //    protected static function extraDetail( &$item ,$uuid )
 //    {
 //        //获取权限
@@ -32,57 +41,37 @@ class UserAuthRoleService implements MainModelInterface {
 //        return $item;
 //    }
     public static function extraDetails($ids) {
-        //数组返回多个，非数组返回一个
-        $isMulti = is_array($ids);
-        if (!is_array($ids)) {
-            $ids = [$ids];
-        }
-        $con[] = ['id', 'in', $ids];
-        $listRaw = self::mainModel()->where($con)->select();
-        $lists = $listRaw ? $listRaw->toArray() : [];
-        $userCountArr = UserAuthUserRoleService::groupBatchCount('role_id', $ids);
-        $accessCountArr = UserAuthRoleAccessService::groupBatchCount('role_id', $ids);
-        $universalCountArr = UserAuthRoleUniversalService::groupBatchCount('role_id', $ids);
-        //权限id数组
-        $accessIdObjs = UserAuthRoleAccessService::mainModel()->where([['role_id', 'in', $ids]])->select();
-        $accessIdArrs = $accessIdObjs ? $accessIdObjs->toArray() : [];
 
-        foreach ($lists as &$v) {
-            //用户人数
-            $v['userCount'] = Arrays::value($userCountArr, $v['id'], 0);
-            //权限数
-            $v['accessCount'] = Arrays::value($accessCountArr, $v['id'], 0);
-            // 页面权限数
-            $v['universalCount'] = Arrays::value($universalCountArr, $v['id'], 0);
-            //权限id
-            $con = [];
-            $con[] = ['role_id', '=', $v['id']];
-            $v['sAccessIds'] = array_column(Arrays2d::listFilter($accessIdArrs, $con), 'access_id');
-        }
+        return self::commExtraDetails($ids, function($lists) use ($ids){
 
-        return $isMulti ? $lists : $lists[0];
-        // return $isMulti ? Arrays2d::fieldSetKey($lists, 'id') : $lists[0];
-    }
+            $userCountArr = UserAuthUserRoleService::groupBatchCount('role_id', $ids);
+            $accessCountArr = UserAuthRoleAccessService::groupBatchCount('role_id', $ids);
+            $universalCountArr = UserAuthRoleUniversalService::groupBatchCount('role_id', $ids);
+            //权限id数组
+            $accessIdObjs = UserAuthRoleAccessService::mainModel()->where([['role_id', 'in', $ids]])->select();
+            $accessIdArrs = $accessIdObjs ? $accessIdObjs->toArray() : [];
+            // 20240413
+            $deptIds    =    SystemAuthJobRoleService::groupBatchColumn('role_id', $ids,'job_id');
 
-    /**
-     * 额外保存信息
-     * @param type $data
-     * @param type $uuid
-     */
-    public static function extraPreSave(&$data, $uuid) {
-        //有传权限数据，则保存权限
-        $sAccessIds = Arrays::value($data, 'sAccessIds', []);
-        if ($sAccessIds) {
-            UserAuthRoleAccessService::saveRoleAccess($uuid, $sAccessIds);
-        }
-    }
-
-    public static function extraPreUpdate(&$data, $uuid) {
-        //有传权限数据，则保存权限
-        $sAccessIds = Arrays::value($data, 'sAccessIds', []);
-        if ($sAccessIds) {
-            UserAuthRoleAccessService::saveRoleAccess($uuid, $sAccessIds);
-        }
+            foreach ($lists as &$v) {
+                // $v['$deptIds'] = $deptIds;
+                //用户人数
+                $v['userCount'] = Arrays::value($userCountArr, $v['id'], 0);
+                //权限数
+                $v['accessCount'] = Arrays::value($accessCountArr, $v['id'], 0);
+                // 页面权限数
+                $v['universalCount'] = Arrays::value($universalCountArr, $v['id'], 0);
+                //权限id
+                $con = [];
+                $con[] = ['role_id', '=', $v['id']];
+                $v['sAccessIds'] = array_column(Arrays2d::listFilter($accessIdArrs, $con), 'access_id');
+                // 20240413
+                $v['roleJobIds']  = Arrays::value($deptIds, $v['id']) ? : [];
+            }
+            
+            return $lists;
+        },true);
+        
     }
 
     /**
@@ -141,7 +130,23 @@ class UserAuthRoleService implements MainModelInterface {
         $lists = self::staticConList($con);
         return array_column($lists, 'id');
     }
-
+    
+    public static function keyToId($key) {
+        $con[] = ['role_key', '=', $key];
+        $info = self::staticConFind($con);
+        return $info ? $info['id'] : '';
+    }
+    
+    /**
+     * id转字符串
+     * @param type $ids
+     */
+    public static function idNames($ids){
+        $con[] = ['id','in',$ids];
+        $lists = self::staticConList($con);
+        $arr = array_column($lists, 'name');
+        return implode(',',$arr);
+    }
     /**
      *
      */

@@ -3,8 +3,10 @@
 namespace xjryanse\user\service;
 
 use xjryanse\system\interfaces\MainModelInterface;
+use xjryanse\system\service\SystemCompanyService;
 use xjryanse\logic\Arrays;
 use xjryanse\logic\Strings;
+use xjryanse\logic\Debug;
 use xjryanse\logic\Url;
 use Exception;
 
@@ -15,8 +17,14 @@ class UserAuthAccessService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
+    use \xjryanse\traits\MainModelRamTrait;
+    use \xjryanse\traits\MainModelCacheTrait;
+    use \xjryanse\traits\MainModelCheckTrait;
+    use \xjryanse\traits\MainModelGroupTrait;
     use \xjryanse\traits\MainModelQueryTrait;
+
     use \xjryanse\traits\StaticModelTrait;
+    use \xjryanse\traits\MainModelComCateLevelQueryTrait;
 
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthAccess';
@@ -40,30 +48,33 @@ class UserAuthAccessService implements MainModelInterface {
             throw new Exception('权限名称不能为空');
         }
     }
-
+    /*
+     * 提取公司全部的可用菜单id
+     */
+    public static function compAllAccessIds(){
+        // 【1】按company_id提取
+        $ids        = self::ids();
+        // 【2】按comp_cate提取
+        $cIds       = self::comCateLevelIds();
+        
+        return array_merge($ids, $cIds);
+    }
     /*
      * 将url链接进行了转化
      */
 
     public static function listsInfo($con = [], $order = 'sort') {
-        if (self::mainModel()->hasField('app_id')) {
-            $con[] = ['app_id', '=', session(SESSION_APP_ID)];
-        }
-        if (self::mainModel()->hasField('company_id')) {
-            $con[] = ['company_id', '=', session(SESSION_COMPANY_ID)];
-        }
-        //只取启用的
-        $con[] = ['status', '=', 1];
-        // index 兼容elementui
-        /*
-        $lists = self::mainModel()->where($con)->field('id,pid,name,icon,access_group,access_type,show_type,url')->order($order)->cache(86400)->select();
-        if($lists){
-            $lists = $lists->toArray();
-        }
-         */
         // 20220814优化
         $keys = ['id','pid','name','icon','access_group','access_type','show_type','url'];
-        $lists = self::staticConList($con, session(SESSION_COMPANY_ID), $order, $keys);
+
+        $ids    = self::compAllAccessIds();
+        $con[] = ['status', '=', 1];
+        $con[] = ['id', 'in', $ids];
+        $lists  = self::mainModel()
+                ->where($con)
+                ->order($order)
+                ->field(implode(',',$keys))
+                ->select();
         //20220515增加替换参数
         $replaceData['year'] = date('Y');
         $replaceData['yearmonth'] = date('Y-m');

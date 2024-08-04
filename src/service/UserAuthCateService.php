@@ -3,10 +3,11 @@
 namespace xjryanse\user\service;
 
 use xjryanse\system\interfaces\MainModelInterface;
+
 /**
- * 用户角色
+ * 角色分类
  */
-class UserTagService implements MainModelInterface {
+class UserAuthCateService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
@@ -16,16 +17,10 @@ class UserTagService implements MainModelInterface {
     use \xjryanse\traits\MainModelGroupTrait;
     use \xjryanse\traits\MainModelQueryTrait;
 
-    use \xjryanse\traits\StaticModelTrait;
-    use \xjryanse\traits\ObjectAttrTrait;
 
     protected static $mainModel;
-    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserTag';
-
-    public static function extraDetails( $ids ){
-        return self::commExtraDetails($ids, function($lists) use ($ids){
-            return $lists;
-        },true);
-    }
+    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthCate';
+    //直接执行后续触发动作
+    protected static $directAfter = true;
 
 }

@@ -3,7 +3,8 @@
 namespace xjryanse\user\service;
 
 use xjryanse\system\interfaces\MainModelInterface;
-
+use xjryanse\logic\Arrays;
+use Exception;
 /**
  * 角色权限
  */
@@ -11,7 +12,12 @@ class UserAuthRoleUniversalService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
+    use \xjryanse\traits\MainModelRamTrait;
+    use \xjryanse\traits\MainModelCacheTrait;
+    use \xjryanse\traits\MainModelCheckTrait;
+    use \xjryanse\traits\MainModelGroupTrait;
     use \xjryanse\traits\MainModelQueryTrait;
+
     use \xjryanse\traits\StaticModelTrait;
     
     protected static $mainModel;
@@ -95,6 +101,24 @@ class UserAuthRoleUniversalService implements MainModelInterface {
         // 清除本表缓存
         self::staticCacheClear();
     }
+    /**
+     * 20240413：用角色id更新
+     * @param type $param
+     */
+    public static function doUpdateByRoleAndId($param){
+        if(!isset($param['hasAuth'])){
+            throw new Exception('hasAuth参数异常');
+        }
+        
+        $keys = ['role_id','universal_table','universal_id'];
+        $data = Arrays::getByKeys($param, $keys);
+        $id = self::commGetIdEG($data);
+        if(!$param['hasAuth']){
+            self::getInstance($id)->deleteRam();
+        }
+        return true;
+    }
+    
     /**
      *
      */

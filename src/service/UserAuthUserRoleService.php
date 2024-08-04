@@ -4,8 +4,12 @@ namespace xjryanse\user\service;
 
 use xjryanse\staff\service\StaffLogService;
 use xjryanse\system\interfaces\MainModelInterface;
-use xjryanse\view\service\ViewStaffService;
+// use xjryanse\view\service\ViewStaffService;
 use xjryanse\user\service\UserService;
+use xjryanse\system\service\SystemAuthJobRoleService;
+use xjryanse\system\service\SystemCompanyUserService;
+use xjryanse\logic\Arrays;
+use xjryanse\logic\Arrays2d;
 /**
  * 用户角色
  */
@@ -13,13 +17,20 @@ class UserAuthUserRoleService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
+    use \xjryanse\traits\MainModelRamTrait;
+    use \xjryanse\traits\MainModelCacheTrait;
+    use \xjryanse\traits\MainModelCheckTrait;
+    use \xjryanse\traits\MainModelGroupTrait;
     use \xjryanse\traits\MainModelQueryTrait;
+
     use \xjryanse\traits\StaticModelTrait;
     use \xjryanse\traits\ObjectAttrTrait;
 
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthUserRole';
 
+    use \xjryanse\user\service\authUserRole\TriggerTraits;
+    
     public static function extraDetails( $ids ){
         return self::commExtraDetails($ids, function($lists) use ($ids){
             return $lists;
@@ -63,7 +74,10 @@ class UserAuthUserRoleService implements MainModelInterface {
         $lists  = self::staticConList($con);
         $roleIds = array_column($lists,'role_id');
         //20220817：兼容客户？？？
-        if(!ViewStaffService::isStaff($userId) && !$roleIds){
+        
+        $isStaff = self::isStaff($userId);
+        // if(!ViewStaffService::isStaff($userId) && !$roleIds){
+        if(!$isStaff && !$roleIds){
             //TODO:客户定制权限处理
             //如果用户不是员工，取客户通用权限            
             $keys = ['customer'];
@@ -73,12 +87,26 @@ class UserAuthUserRoleService implements MainModelInterface {
         return $roleIds;
     }
     /**
+     * 带岗位的权限id
+     */
+    public static function userRoleIdsWithJob($userId){
+        // 用户id，提取岗位id
+        $jobIds         = SystemCompanyUserService::dimJobIdsByUserId($userId);
+        // 岗位id，提取角色id
+        $jobRoleIds     = SystemAuthJobRoleService::dimRoleIdsByJobId($jobIds);
+        // 用户id，提取角色id
+        $userRoleIds    = self::userRoleIds($userId);
+        return Arrays::uniqueMerge($jobRoleIds, $userRoleIds);
+    }
+
+    /**
      * 查看用户是否有某个权限
      */
     public static function userHasRole( $userId, $roleId )
     {
         $con[] = ['user_id','in',$userId];
         $con[] = ['role_id','in',$roleId];
+        // dump($con);
         return self::staticConCount($con);
     }
     /**
@@ -117,6 +145,34 @@ class UserAuthUserRoleService implements MainModelInterface {
         // 客户
         return 'customer';
     }
+    /**
+     * 替代视图viewStaff同名方法
+     * 2023-10-08是否员工？
+     */
+    public static function isStaff ($userId) {
+        // 20231208:超级管理员也行,默认是员工
+        $userInfo   = UserService::getInstance($userId)->get();
+        $admType    = Arrays::value($userInfo,'admin_type');
+        if($admType == 'super' || $admType == 'subSuper'){
+            return true;
+        }
+
+        $staffRoleKeys = ['logistics','driver'];
+        
+        return self::userHasRoleKey($userId, $staffRoleKeys);
+    }
+    /**
+     * 20231228:全部员工的用户id
+     */
+    public static function staffUserIds($con = []){
+        $roleKey = ['logistics','driver'];
+        $roleIds = UserAuthRoleService::keysToIds($roleKey);
+
+        $con[]      = ['role_id','in',$roleIds];
+        $lists      = self::staticConList($con);
+        return Arrays2d::uniqueColumn($lists, 'user_id');
+    }
+    
     /**
      *
      */

@@ -3,10 +3,11 @@
 namespace xjryanse\user\service;
 
 use xjryanse\system\interfaces\MainModelInterface;
+
 /**
- * 用户角色
+ * 角色权限
  */
-class UserTagService implements MainModelInterface {
+class UserAuthRoleJumpService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
@@ -18,14 +19,15 @@ class UserTagService implements MainModelInterface {
 
     use \xjryanse\traits\StaticModelTrait;
     use \xjryanse\traits\ObjectAttrTrait;
-
+    
     protected static $mainModel;
-    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserTag';
+    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthRoleJump';
 
-    public static function extraDetails( $ids ){
-        return self::commExtraDetails($ids, function($lists) use ($ids){
-            return $lists;
-        },true);
+    public static function getUrl($roleId, $key){
+        $con[]  = ['role_id','in',$roleId];
+        $con[]  = ['jump_key','=',$key];
+        $info   = self::staticConFind($con);
+        return $info ? $info['jump_url'] : '';
     }
 
 }

@@ -1,26 +1,11 @@
 <?php
 
-namespace xjryanse\user\service;
-
-use xjryanse\system\interfaces\MainModelInterface;
+namespace xjryanse\user\service\index;
 
 /**
- * 签到奖励表
+ * 分页复用列表
  */
-class UserSignAwardService implements MainModelInterface {
-
-    use \xjryanse\traits\InstTrait;
-    use \xjryanse\traits\MainModelTrait;
-    use \xjryanse\traits\MainModelRamTrait;
-    use \xjryanse\traits\MainModelCacheTrait;
-    use \xjryanse\traits\MainModelCheckTrait;
-    use \xjryanse\traits\MainModelGroupTrait;
-    use \xjryanse\traits\MainModelQueryTrait;
-
-
-    protected static $mainModel;
-    protected static $mainModelClass = '\\xjryanse\\user\\model\\UserSignAward';
-
+trait FieldTraits{
     /**
      *
      */
@@ -36,6 +21,13 @@ class UserSignAwardService implements MainModelInterface {
     }
 
     /**
+     * 推荐用户id
+     */
+    public function fRecUserId() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
      *
      */
     public function fCompanyId() {
@@ -43,56 +35,118 @@ class UserSignAwardService implements MainModelInterface {
     }
 
     /**
-     * 用户id
+     * 用户名
      */
-    public function fUserId() {
+    public function fUsername() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     * 签到id
+     * 会员等级：normal普通会员；senior：高级会员
      */
-    public function fSignLogId() {
+    public function fDegree() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     * 奖励名称
+     * 用户头像【存id】
      */
-    public function fAwardName() {
+    public function fHeadimg() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     * 奖励类型
+     * 密码
      */
-    public function fAwardType() {
+    public function fPassword() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     * 奖励值
+     * 手机
      */
-    public function fAwardValue() {
+    public function fPhone() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     * 奖励记录表
+     * 平台昵称
      */
-    public function fAwardTable() {
+    public function fNickname() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     * 奖励记录表id
+     * 真实姓名
      */
-    public function fAwardTableId() {
+    public function fRealname() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    public function fNamePhone() {
+        return $this->fieldValue('namePhone');
+    }
+
+    /**
+     * 性别(1男,2女)
+     */
+    public function fSex() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     * 排序
+     * 生日
+     */
+    public function fBirthday() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    public function fBusierId() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 身份证号
+     */
+    public function fIdNo() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 注册来源
+     */
+    public function fSource() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 后台类型:
+      '':无后台权限
+      'normal':普通后台用户
+      'super':系统超级管理员
+      'subsuper'公司级超级管理
+
+     */
+    public function fAdminType() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 末次登录ip
+     */
+    public function fLastLoginip() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     * 末次登录时间
+     */
+    public function fLastLogintime() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
+    /**
+     *
      */
     public function fSort() {
         return $this->getFFieldValue(__FUNCTION__);
@@ -133,15 +187,19 @@ class UserSignAwardService implements MainModelInterface {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
+    public function fSign() {
+        return $this->getFFieldValue(__FUNCTION__);
+    }
+
     /**
-     * 创建者，user表
+     * 创建者
      */
     public function fCreater() {
         return $this->getFFieldValue(__FUNCTION__);
     }
 
     /**
-     * 更新者，user表
+     * 更新者
      */
     public function fUpdater() {
         return $this->getFFieldValue(__FUNCTION__);

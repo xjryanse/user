@@ -22,7 +22,8 @@ class LoginLogic
         $con[] = ['username','=', $userName ];
         $con[] = ['company_id','in',session(SESSION_COMPANY_ID)];
 
-        $userInfo = UserService::mainModel()->where( $con )->find();
+        // $userInfo = UserService::mainModel()->where( $con )->find();
+        $userInfo = UserService::find($con);
 
         if(!$userInfo){
             //系统级的超级管理员账户：跨了公司
@@ -50,6 +51,8 @@ class LoginLogic
 //            WechatUserBindService::updateUserIdByOpenid( session('myOpenid') , $userInfo['id']);
 //        }
         unset($userInfo['password']);
+        // dump('1111');
+        // dump('login');dump($userInfo);
         return $userInfo;
     }
     /**

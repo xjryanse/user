@@ -11,8 +11,16 @@ class UserAuthRoleAccessService implements MainModelInterface {
 
     use \xjryanse\traits\InstTrait;
     use \xjryanse\traits\MainModelTrait;
+    use \xjryanse\traits\MainModelRamTrait;
+    use \xjryanse\traits\MainModelCacheTrait;
+    use \xjryanse\traits\MainModelCheckTrait;
+    use \xjryanse\traits\MainModelGroupTrait;
     use \xjryanse\traits\MainModelQueryTrait;
 
+    use \xjryanse\traits\StaticModelTrait;
+    use \xjryanse\traits\MiddleModelTrait;
+    // use \xjryanse\traits\MainModelComCateLevelQueryTrait;
+    
     protected static $mainModel;
     protected static $mainModelClass = '\\xjryanse\\user\\model\\UserAuthRoleAccess';
 
@@ -27,10 +35,22 @@ class UserAuthRoleAccessService implements MainModelInterface {
             $con[] = ['app_id', '=', session(SESSION_APP_ID)];
         }
 
-        return self::mainModel()->where($con)->distinct('access_id')->cache(86400)->column('access_id');
+        $res = self::mainModel()->where($con)->distinct('access_id')->cache(86400)->column('access_id');
+        // 20240226:父级id也提取
+        $conf   = [];
+        $conf[] = ['id','in',$res];
+        $conf[] = ['pid','<>',''];
+        $pids   = UserAuthAccessService::mainModel()->where($conf)->distinct('pid')->cache(86400)->column('pid');
+
+        // $pids   = [];
+        return array_merge($res, $pids);
     }
     /**
      * 保存角色的权限id
+     * 20240413：使用以下方法替代
+     * 
+     * UserAuthRoleAccessService::middleBindRam('role_id', $uuid, 'access_id', $sAccessIds, true);
+     * 
      * @param type $roleId      角色id
      * @param type $accessIds   权限id
      */
@@ -39,13 +59,32 @@ class UserAuthRoleAccessService implements MainModelInterface {
         $con[] = ['role_id','=',$roleId];
         //先删
         self::mainModel()->where($con)->delete();
+        // 20240412把所有父级一并写一下
+        $conA[] = ['id','in',$accessIds];
+        $conA[] = ['pid','<>',''];
+        $pids = UserAuthAccessService::where($conA)->whereNotNull('pid')->column('pid');
+        $nAccessIds = array_unique(array_merge($accessIds, $pids));
         //再加
         $tempArr = [];
-        foreach( $accessIds as &$accessId ){
+        foreach( $nAccessIds as &$accessId ){
             $tempArr[] = ['role_id'=>$roleId,'access_id'=>$accessId];
         }
         return self::saveAll($tempArr);
     }
+    /**
+     * 第一个页面key
+     */
+    public static function firstPageKey( $userId ){
+        $roleIds    = UserAuthUserRoleService::userRoleIdsWithJob($userId);
+        $accessIds  = self::roleAccessIds( $roleIds );
+        
+        $con        = [];
+        $con[]      = ['id','in',$accessIds];
+        $key        = UserAuthAccessService::where($con)->whereNotNull('page_key')->order('sort')->value('page_key');
+
+        return $key;
+    }
+    
     /**
      *
      */
